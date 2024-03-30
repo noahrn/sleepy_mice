@@ -39,17 +39,18 @@ class CGD(torch.nn.Module):
     Latest update February 2024
     """
 
-    def __init__(self,  num_comp, X, Xtilde=None, model="SPCA", G_idx=None,lambda1=None,lambda2=None,init=None):
+    def __init__(self,  num_comp, X, Xtilde=None, model="SPCA", G_idx=None,lambda1=None,lambda2=None,init=None, verbose=False):
         super().__init__()
-        print('Initializing model: '+model)
+        if verbose:
+            print('Initializing model: '+model)
         t1 = time()
         
         self.model = model
+        self.keys = X.keys()
 
         num_modalities = len(X) #infer number of modalities from number of entries in dictionary X
         P = X[list(self.keys)[0]].shape[-1] #P should be equal across all dictionary entries
         other_dims = list(X[list(self.keys)[0]].shape[:-2]) #other dimensions, except N
-        self.keys = X.keys()
 
         # Allow for the shared generator matrix to only learn from part of the data (dimension P),
         # such as the post-stimulus period in evoked-responses, while S covers the whole signal
@@ -82,9 +83,8 @@ class CGD(torch.nn.Module):
                 self.G = torch.nn.Parameter(
                     self.softmaxG(-torch.log(torch.rand((torch.sum(G_idx).int(), num_comp), dtype=torch.double)))
                 )
-                # squeeze if num_modalities is 1 and if no multiple subjects or conditions are presented
                 self.S = torch.nn.Parameter(
-                    self.softmaxS(torch.squeeze(-torch.log(torch.rand(self.S_size, dtype=torch.double))))
+                    self.softmaxS(-torch.log(torch.rand(self.S_size, dtype=torch.double)))
                 )
             else:
                 self.G = init['G'].clone()
@@ -102,7 +102,8 @@ class CGD(torch.nn.Module):
                 self.Bp = torch.nn.Parameter(init['Bp'].clone())
                 self.Bn = torch.nn.Parameter(init['Bn'].clone())
         t2 = time()
-        print('Model initialized in '+str(t2-t1)+' seconds')
+        if verbose:
+            print('Model initialized in '+str(t2-t1)+' seconds')
 
     def get_model_params(self):
         with torch.no_grad():
@@ -163,12 +164,9 @@ class CGD(torch.nn.Module):
     
     def forwardAA(self,G_soft,S_soft):
         loss = 0
-        XtXG = self.XtXtilde @ G_soft
-        loss+= torch.sum(self.Xsqnorm) - 2 * torch.sum(torch.transpose(XtXG, -2, -1) * S_soft)
         for m,key in enumerate(self.keys):
-            XG = self.Xtilde[key] @ G_soft
-            SSE = torch.sum(XG*XG)
-            loss += SSE
+            loss += torch.sum(torch.linalg.matrix_norm(self.X[key]-self.Xtilde[key]@G_soft@S_soft[m])**2)
+
         return loss
     
     def forwardSPCA(self,G):
