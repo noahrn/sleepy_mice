@@ -26,7 +26,9 @@ def load_data(data_path):
     data = pd.read_csv(data_path)
     return data
 
-def load_and_process_data(normalize=True, data_path=None, lab='all'):
+def load_and_process_data(normalize=True, data_path=None, lab="all"):
+    lab = str(lab)  # convert lab to string
+
     if data_path is None:
         config = load_config()
         data_path = config['data_path']
@@ -42,14 +44,14 @@ def load_and_process_data(normalize=True, data_path=None, lab='all'):
 
     # filter by lab
     if lab != 'all':
-        if '+' in lab:
-            labs = [float(l) for l in lab.split('+')]
-            data = data[data['lab'].isin(labs)]
-        else:
-            data = data[data['lab'] == float(lab)]
+        labs = [float(l) for l in lab.split(',')]
+        data = data[data['lab'].isin(labs)]
 
     if normalize:
-        print("Normalizing data...")
+        if lab == 'all':
+            print("Normalizing data for all labs...")
+        else:
+            print(f"Normalizing data for lab {lab}...")
         scaler = StandardScaler()
         for mouse in data['unique_id'].unique():
             mouse_data = data[data['unique_id'] == mouse]
@@ -63,8 +65,11 @@ def load_and_process_data(normalize=True, data_path=None, lab='all'):
             for feature in eeg_features:
                 df_standardized_3std.loc[mouse_data.index, feature] = mouse_data[feature][np.abs(mouse_data[feature] - mouse_data[feature].mean()) <= 3 * mouse_data[feature].std()]
         
-        print("Normalized data successfully loaded.")
+        if lab == 'all':
+            print("Normalized data successfully loaded from all labs.")
+        else:
+            print(f"Normalized data successfully loaded from lab {lab}.")
         return df_standardized_3std
     else:
-        print("Raw data successfully loaded.")
+        print(f"Raw data successfully loaded from lab {lab}.")
         return data
