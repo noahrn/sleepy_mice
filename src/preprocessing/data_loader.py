@@ -46,6 +46,10 @@ def load_and_process_data(normalize=True, data_path=None, lab="all"):
     if lab != 'all':
         labs = [float(l) for l in lab.split(',')]
         data = data[data['lab'].isin(labs)]
+    else:
+        labs = data['lab'].unique()
+
+    data.sort_values('unique_id', inplace=True)
 
     if normalize:
         if lab == 'all':
@@ -60,13 +64,17 @@ def load_and_process_data(normalize=True, data_path=None, lab="all"):
         df_standardized_3std = data.copy()
         
         # remove data points that are more than 3 stdv away from the mean for each EEG feature
+        all_outliers = []
         for mouse in df_standardized_3std['unique_id'].unique():
             mouse_data = df_standardized_3std[df_standardized_3std['unique_id'] == mouse]
             for feature in eeg_features:
-                df_standardized_3std.loc[mouse_data.index, feature] = mouse_data[feature][np.abs(mouse_data[feature] - mouse_data[feature].mean()) <= 3 * mouse_data[feature].std()]
+                is_within_3_std = np.abs(mouse_data[feature] - mouse_data[feature].mean()) <= 3 * mouse_data[feature].std()
+                outliers = mouse_data[~is_within_3_std].index
+                all_outliers.extend(outliers)
+
         
         # Drop rows with NaN values after outlier removal
-        df_standardized_3std.dropna(subset=eeg_features, inplace=True)
+        df_standardized_3std.drop(all_outliers, inplace=True)
 
         if lab == 'all':
             print("Normalized data successfully loaded from all labs.")
