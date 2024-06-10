@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 *.pyo
+*.npy
 *.egg-info/
 config.json
 data/*
