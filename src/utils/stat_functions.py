@@ -107,7 +107,7 @@ def nmi_lineplot(lab_S_lists):
     
     
 
-def permute_and_calculate_NMI(S_list, num_permutations=50):
+def permute_and_calculate_NMI(S_lists, num_permutations=50):
 
     """
     This function takes a list of lists of S matrices and calculates the NMI between each pair of matrices with permutations.
