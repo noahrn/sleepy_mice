@@ -28,11 +28,14 @@ class AA(torch.nn.Module):
             t2 = time()
             print('Model initialized in ' + str(t2 - t1) + ' seconds')
 
-    def get_model_params(self):
+    def get_model_params(self, get_numpy=True):
         with torch.no_grad():
             S_soft = self.softmaxS(self.S)
             G_soft = self.softmaxG(self.G)
-            return G_soft.detach(), S_soft.detach()
+            if get_numpy:
+                return G_soft.cpu().numpy(), S_soft.cpu().numpy()
+            else:
+                return G_soft, S_soft
 
     def forward(self):
         S_soft = self.softmaxS(self.S)
