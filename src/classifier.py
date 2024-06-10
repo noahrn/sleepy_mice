@@ -6,6 +6,7 @@ import torch
 import random
 import numpy as np
 from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
 
@@ -14,7 +15,7 @@ Data loading & preprocessing
 """
 # modularized data load
 data = load_and_process_data(normalize=True, lab="all")
-data = data.sample(frac=1, random_state=0).reset_index(drop=True)
+data = data.sample(frac=0.1, random_state=0).reset_index(drop=True) # test with different subset fractions
 print("Data loaded and normalized with shape:", data.shape)
 
 # labels to be classified
@@ -42,22 +43,23 @@ C, S = C.cpu().detach().numpy(), S.cpu().detach().numpy()
 print("Matrix C shape:", C.shape, "Matrix S shape:", S.shape)
 
 """
-SVM classifier
+Classifier
 """
+###### Lab ######
 # split
 X_train, X_test, y_train, y_test = train_test_split(S.T, labs, test_size=0.2, random_state=42)
 
-# SVM classifier form sklearn
-svm_classifier = SVC(kernel='linear')
+# randomforest from sklearn
+classifier = RandomForestClassifier(n_estimators=100, random_state=0)
 
 # train
-print("Training SVM classifier...")
-svm_classifier.fit(X_train, y_train)
+print("Training lab classifier...")
+classifier.fit(X_train, y_train)
 
 # test
-predictions = svm_classifier.predict(X_test)
+predictions = classifier.predict(X_test)
 accuracy = accuracy_score(y_test, predictions)
-print("Accuracy of SVM classifier on test set:", accuracy)
+print("Accuracy of classifier on test set:", accuracy)
 print("Classification Report:\n", classification_report(y_test, predictions))
 
 # check if data is lab-driven
@@ -65,3 +67,27 @@ if accuracy < 0.5:
     print("Data appears not to be lab-driven.")
 else:
     print("Data may contain lab-driven patterns.")
+
+print("\n" + "-"*75 + "\n")
+###### MOUSE ######
+# split
+X_train, X_test, y_train, y_test = train_test_split(S.T, mice, test_size=0.2, random_state=42)
+
+# randomforest from sklearn
+classifier = RandomForestClassifier(n_estimators=100, random_state=0)
+
+# train
+print("Training mouse classifier...")
+classifier.fit(X_train, y_train)
+
+# test
+predictions = classifier.predict(X_test)
+accuracy = accuracy_score(y_test, predictions)
+print("Accuracy of classifier on test set:", accuracy)
+print("Classification Report:\n", classification_report(y_test, predictions))
+
+# check if data is lab-driven
+if accuracy < 0.5: 
+    print("Data appears not to be mouse-driven.")
+else:
+    print("Data may contain mouse-driven patterns.")
