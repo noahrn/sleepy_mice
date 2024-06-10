@@ -20,7 +20,7 @@ data = data.sample(frac=1, random_state=0).reset_index(drop=True) # test with di
 print("Data loaded and normalized with shape:", data.shape)
 
 # check NAN
-print("Number of NaN values in data:", data.isnull().sum().sum())
+#print("Number of NaN values in data:", data.isnull().sum().sum())
 
 # labels to be classified
 labels = ['lab', 'unique_id']
