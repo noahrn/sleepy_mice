@@ -36,7 +36,13 @@ def load_and_process_data(normalize=True, data_path=None, lab="all"):
     data = load_data(data_path)
     
     # add unique_id column (mouse specific ID)
-    data['unique_id'] = data['lab'].astype(str) + '_' + data['mouseID'].astype(str)
+    # Determine the maximum length of mouseID as a string for each lab
+    max_length = data.groupby('lab')['mouseID'].transform(lambda x: x.astype(str).str.len().max())
+
+    # Create unique_id by padding mouseID with leading zeros
+    data['unique_id'] = data.apply(lambda x: f"{x['lab']}_{x['mouseID']:0{max_length.loc[x.name]}}", axis=1)
+
+    # Optionally, convert to categorical and encode as you were doing, if needed
     data['unique_id'] = data['unique_id'].astype('category').cat.codes + 1
 
     # remove lab 4
@@ -48,8 +54,6 @@ def load_and_process_data(normalize=True, data_path=None, lab="all"):
         data = data[data['lab'].isin(labs)]
     else:
         labs = data['lab'].unique()
-
-    data.sort_values('unique_id', inplace=True)
 
     if normalize:
         if lab == 'all':

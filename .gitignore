@@ -4,6 +4,7 @@ __pycache__/
 *.npy
 *.egg-info/
 config.json
+config_old.json
 data/*
 !.gitignore
 .DS_Store
