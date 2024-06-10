@@ -1,7 +1,5 @@
 import sys
 import os
-from CGD import AA, Optimizationloop
-from preprocessing.data_loader import load_and_process_data
 import torch
 import random
 import numpy as np
@@ -10,12 +8,15 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
 
+from CGD import AA, Optimizationloop
+from preprocessing.data_loader import load_and_process_data
+
 """
 Data loading & preprocessing
 """
 # modularized data load
 data = load_and_process_data(normalize=True, lab="all")
-data = data.sample(frac=0.1, random_state=0).reset_index(drop=True) # test with different subset fractions
+data = data.sample(frac=1, random_state=0).reset_index(drop=True) # test with different subset fractions
 print("Data loaded and normalized with shape:", data.shape)
 
 # labels to be classified
@@ -43,7 +44,7 @@ C, S = C.cpu().detach().numpy(), S.cpu().detach().numpy()
 print("Matrix C shape:", C.shape, "Matrix S shape:", S.shape)
 
 """
-Classifier
+Classifiers
 """
 ###### Lab ######
 # split
@@ -90,4 +91,4 @@ print("Classification Report:\n", classification_report(y_test, predictions))
 if accuracy < 0.5: 
     print("Data appears not to be mouse-driven.")
 else:
-    print("Data may contain mouse-driven patterns.")
+    print("Data may contain mouse-driven patterns.")    
