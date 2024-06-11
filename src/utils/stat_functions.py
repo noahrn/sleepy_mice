@@ -29,7 +29,7 @@ def calculate_NMI(S1, S2):
     Calculate the Normalized Mutual Information (NMI) between two matrices with continuous data.
     """
     # Calculate NMI
-    NMI = 2 * calculate_MI(S1,S2) / (calculate_MI(S1, S1) + calculate_MI(S2,S2))
+    NMI = (2 * calculate_MI(S1,S2)) / (calculate_MI(S1, S1) + calculate_MI(S2,S2))
     
     return NMI
 
