@@ -20,31 +20,22 @@ def load_config(config_path=None):
         config = json.load(config_file)
     return config
 
-def load_data(data_path):
+def load_data(data_path, verbose=True):
     absolute_data_path = os.path.abspath(data_path)
-    print(f"Loading data from {absolute_data_path}")
+    if verbose:
+        print(f"Loading data from {absolute_data_path}")
     data = pd.read_csv(data_path)
     return data
 
-def load_and_process_data(normalize=True, data_path=None, lab="all"):
+def load_and_process_data(normalize=True, data_path=None, lab="all", verbose=True):
     lab = str(lab)  # convert lab to string
 
     if data_path is None:
         config = load_config()
         data_path = config['data_path']
 
-    data = load_data(data_path)
+    data = load_data(data_path, verbose=verbose)
     
-    # add unique_id column (mouse specific ID)
-    # Determine the maximum length of mouseID as a string for each lab
-    max_length = data.groupby('lab')['mouseID'].transform(lambda x: x.astype(str).str.len().max())
-
-    # Create unique_id by padding mouseID with leading zeros
-    data['unique_id'] = data.apply(lambda x: f"{x['lab']}_{x['mouseID']:0{max_length.loc[x.name]}}", axis=1)
-
-    # Optionally, convert to categorical and encode as you were doing, if needed
-    data['unique_id'] = data['unique_id'].astype('category').cat.codes + 1
-
     # remove lab 4
     data = data[data['lab'] != 4.0]
 
@@ -56,10 +47,12 @@ def load_and_process_data(normalize=True, data_path=None, lab="all"):
         labs = data['lab'].unique()
 
     if normalize:
-        if lab == 'all':
-            print("Normalizing data for all labs...")
-        else:
-            print(f"Normalizing data for lab {lab}...")
+        if verbose:
+            if lab == 'all':
+                print("Normalizing data for all labs...")
+            else:
+                print(f"Normalizing data for lab {lab}...")
+                
         scaler = StandardScaler()
         for mouse in data['unique_id'].unique():
             mouse_data = data[data['unique_id'] == mouse]
@@ -80,11 +73,14 @@ def load_and_process_data(normalize=True, data_path=None, lab="all"):
         # Drop rows with NaN values after outlier removal
         df_standardized_3std.drop(all_outliers, inplace=True)
 
-        if lab == 'all':
-            print("Normalized data successfully loaded from all labs.")
-        else:
-            print(f"Normalized data successfully loaded from lab {lab}.")
+        if verbose:
+            if lab == 'all':
+                print("Normalized data successfully loaded from all labs.")
+            else:
+                print(f"Normalized data successfully loaded from lab {lab}.")
+                
         return df_standardized_3std
     else:
-        print(f"Raw data successfully loaded from lab {lab}.")
+        if verbose:
+            print(f"Raw data successfully loaded from lab {lab}.")
         return data
