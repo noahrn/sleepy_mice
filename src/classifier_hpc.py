@@ -69,7 +69,6 @@ def process_and_classify(labels, K):
     
     return accuracies
 
-# Collect and plot results
 K_values = range(2, 11)
 mean_accuracies = []
 std_accuracies = []
