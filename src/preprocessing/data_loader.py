@@ -27,15 +27,37 @@ def load_data(data_path, verbose=True):
     data = pd.read_csv(data_path)
     return data
 
-def load_and_process_data(normalize=True, data_path=None, lab="all", verbose=True):
+def load_and_process_data(normalize=True, data_path=None, lab="all", verbose=True, narcolepsy=False):
     lab = str(lab)  # convert lab to string
+    data = None  # initialize data
+
+    config = load_config()
 
     if data_path is None:
-        config = load_config()
         data_path = config['data_path']
 
     data = load_data(data_path, verbose=verbose)
-    
+
+    if narcolepsy:
+        narcolepsy_path = config['narcolepsy_path']
+        narcolepsy_data = load_data(narcolepsy_path, verbose=verbose)
+        narcolepsy_data['narcolepsy'] = 1
+        narcolepsy_data.reset_index(drop=True, inplace=True)
+        
+        # label the healthy data as 0 for 'narcolepsy'
+        data['narcolepsy'] = 0
+        data.reset_index(drop=True, inplace=True)
+        
+        data = pd.concat([data, narcolepsy_data])
+        data.reset_index(drop=True, inplace=True)
+        if verbose:
+            print("Loaded healthy & narcolepsy data successfully.")
+    else:
+        if verbose:
+            print("Healthy data loaded successfully.")
+
+    print(data)
+
     # remove lab 4
     data = data[data['lab'] != 4.0]
 
@@ -70,7 +92,7 @@ def load_and_process_data(normalize=True, data_path=None, lab="all", verbose=Tru
         for mouse in data['unique_id'].unique():
             mouse_data = data[data['unique_id'] == mouse]
             for feature in eeg_features:
-                data.loc[mouse_data.index, feature] = scaler.fit_transform(mouse_data[[feature]])
+                    data.loc[mouse_data.index, feature] = scaler.fit_transform(mouse_data[[feature]])
 
         df_standardized_3std = data.copy()
 

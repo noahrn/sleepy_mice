@@ -15,7 +15,7 @@ from preprocessing.data_loader import load_and_process_data
 Data loading & preprocessing
 """
 # modularized data load
-data = load_and_process_data(normalize=True, lab="all")
+data = load_and_process_data(normalize=True, lab="all", narcolepsy=False)
 #data = data.sample(frac=1, random_state=0).reset_index(drop=True) # test with different subset fractions
 #print("Data loaded and normalized with shape:", data.shape)
 print(data)
