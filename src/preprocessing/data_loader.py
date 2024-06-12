@@ -5,7 +5,7 @@ import json
 from sklearn.preprocessing import StandardScaler
 
 # Seeding
-np.random.seed(0)
+#np.random.seed(0)
 
 # EEG features
 eeg_features = ['slowdelta', 'fastdelta', 'slowtheta', 'fasttheta', 'alpha', 'beta', 'rms']

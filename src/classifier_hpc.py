@@ -57,7 +57,7 @@ def process_and_classify(labels, K):
         C, S = model.get_model_params()
         C, S = C.cpu().detach().numpy(), S.cpu().detach().numpy()
         
-        X_train, X_test, y_train, y_test = train_test_split(S.T, labels, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(S.T, labels, test_size=0.2)
         
         # using LGBM for gpu acceleration for hpc
         classifier = LGBMClassifier(boosting_type='rf', n_estimators=100, random_state=0, bagging_freq=1, bagging_fraction=0.8, feature_fraction=0.8, verbose=-1)
