@@ -16,9 +16,9 @@ Data loading & preprocessing
 """
 # modularized data load
 data = load_and_process_data(normalize=True, lab="all")
-data = data.sample(frac=1, random_state=0).reset_index(drop=True) # test with different subset fractions
-print("Data loaded and normalized with shape:", data.shape)
-print(data.head())
+#data = data.sample(frac=1, random_state=0).reset_index(drop=True) # test with different subset fractions
+#print("Data loaded and normalized with shape:", data.shape)
+print(data)
 
 # labels to be classified
 labs = data['lab'].values
