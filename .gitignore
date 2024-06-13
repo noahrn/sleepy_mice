@@ -9,3 +9,4 @@ config_old.json
 data/*
 !.gitignore
 .DS_Store
+src/test.ipynb
