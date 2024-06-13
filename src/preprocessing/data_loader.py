@@ -55,8 +55,9 @@ def load_and_process_data(normalize=True, data_path=None, lab="all", verbose=Tru
     else:
         if verbose:
             print("Healthy data loaded successfully.")
-
-    print(data)
+    
+    if verbose:
+        print(data)
 
     # remove lab 4
     data = data[data['lab'] != 4.0]
