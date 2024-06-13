@@ -1,25 +1,25 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 
 def calculate_MI(S1, S2):
     """
     This function calculates the Mutual Information (MI) between two matrices with continuous data.
     """
-    
-    # Calculate p(d, d') as the dot product between S1 and S2 transpose (normalized)
+    # sum_n p(d|n)*p(d'|n)
     prob = S1@S2.T
 
-    # Normalize joint distribution to ensure it sums to 1
+    # Normalize joint distribution to ensure it sums to 1. p(d, d')
     prob_XY = prob/np.sum(prob)
 
-    # Calculate marginal distributions
+    # Calculate marginal distributions p(d)*p(d')   p(d) = sum_d' (p(d,d')) and p(d') = sum_d (p(d,d'))
     prob_X_Y = np.outer(np.sum(prob_XY, axis=1), np.sum(prob_XY, axis=0))
     
     # Makes sure that the probability larger than 0
     ind = np.where(prob_XY > 0)
 
-    # Calculate mutual information
+    # Calculate mutual information. MI = sum(p(d,d')*log(p(d,d')/(p(d)*p(d')))
     MI = np.sum(prob_XY[ind] * np.log(prob_XY[ind] / prob_X_Y[ind]))
 
     return MI
@@ -107,7 +107,104 @@ def nmi_lineplot(lab_S_lists):
     
     
 
-def permute_and_calculate_NMI(S_lists, num_permutations=50):
+def permute_and_calculate_NMI(S_list, num_permutations=50):
+
+    """
+    This function takes a list of lists of S matrices and calculates the NMI between each pair of matrices with permutations.
+
+    :param S_list: List of lists of S matrices. Each list corresponds to a different number of components.
+    :param num_permutations: Number of permutations to calculate NMI scores.
+
+    :return: List of lists of NMI scores for each number of components.
+    
+    """
+    # NMI score for every component
+      # List of lists to store NMI scores for each component count
+  
+    component_scores = []  # Scores for this particular component count
+    num_matrices = len(S_list)
+
+    for i in range(num_matrices):
+        S1 = np.array(S_list[i])
+        S2 = np.array(S_list[(i + 1) % num_matrices])  # Wrap-around for the last element
+        for _ in range(num_permutations):
+            permuted_S2 = S2[:, np.random.permutation(S2.shape[1])]
+            nmi = calculate_NMI(S1, permuted_S2)
+            component_scores.append(nmi)
+    return component_scores
+
+
+def plot_histogram(scores, bins=30, title="Histogram of NMI Scores"):
+    """
+    This function plots a histogram of NMI scores for permuted matrices.
+    
+    """
+    plt.figure(figsize=(10, 6))
+    plt.hist(scores, bins=bins, color='blue', alpha=0.7)
+    plt.title(title)
+    plt.xlabel('NMI Score')
+    plt.ylabel('Frequency')
+    plt.show()
+
+
+def plot_comparison_nmi(S_lists):
+    fig, ax = plt.subplots(figsize=(12, 6))
+    all_original_scores = []
+    all_permuted_scores = []
+
+    # Compute and collect NMI scores for each set of components with tqdm
+    for S_list in tqdm(S_lists):
+        original_scores = [calculate_NMI(np.array(S_list[i]), np.array(S_list[(i + 1) % len(S_list)])) for i in range(len(S_list))]
+        all_original_scores.append(original_scores)
+        
+        permuted_scores = permute_and_calculate_NMI(S_list)
+        all_permuted_scores.append(permuted_scores)
+
+    n_components = len(S_lists)
+    positions = np.arange(1, n_components + 1)
+
+    # Plotting original scores directly over the ticks
+    ax.boxplot(all_original_scores, positions=positions, widths=0.3, patch_artist=True, 
+               boxprops=dict(facecolor='lightblue'), labels=['Original']*n_components)
+
+    # Plotting permuted scores directly over the ticks, slightly offset
+    ax.boxplot(all_permuted_scores, positions=positions, widths=0.3, patch_artist=True, 
+               boxprops=dict(facecolor='lightgreen'), labels=['Permuted']*n_components)
+
+    ax.set_title('Comparison of NMI Scores: Original vs Permuted')
+    ax.set_xlabel('Number of Components')
+    ax.set_ylabel('NMI Scores')
+    ax.set_xticks(positions)
+    ax.set_xticklabels([i+1 for i in positions])
+    plt.legend(['Original', 'Permuted'])
+    plt.grid(True)
+    plt.show()
+
+
+def permute_and_calculate_self_NMI(S, num_permutations=50):
+    """
+    This function takes a single matrix S and calculates the NMI between the matrix and its row-permutated versions.
+
+    :param S: A single S matrix.
+    :param num_permutations: Number of permutations to calculate NMI scores.
+
+    :return: List of NMI scores for the permutations.
+    """
+    # Convert S to numpy array if it isn't already
+    S = np.array(S)
+    nmi_scores = []  # List to store NMI scores for each permutation
+
+    for _ in range(num_permutations):
+        # Permute rows of S
+        permuted_S = S[np.random.permutation(S.shape[0]), :]
+        nmi = calculate_NMI(S, permuted_S)
+        # print(nmi)
+        nmi_scores.append(nmi)
+
+    return nmi_scores
+
+
+def permute_rows_and_calculate_NMI(S_lists, num_permutations=50):
 
     """
     This function takes a list of lists of S matrices and calculates the NMI between each pair of matrices with permutations.
@@ -129,58 +226,10 @@ def permute_and_calculate_NMI(S_lists, num_permutations=50):
             S1 = np.array(S_list[i])
             S2 = np.array(S_list[(i + 1) % num_matrices])  # Wrap-around for the last element
             for _ in range(num_permutations):
-                permuted_S2 = S2[:, np.random.permutation(S2.shape[1])]
+                permuted_S2 = S2[np.random.permutation(S2.shape[0]),:]
                 nmi = calculate_NMI(S1, permuted_S2)
                 component_scores.append(nmi)
 
         all_component_scores.append(component_scores)
 
     return all_component_scores
-
-
-def plot_histogram(scores, bins=30, title="Histogram of NMI Scores"):
-    """
-    This function plots a histogram of NMI scores for permuted matrices.
-    
-    """
-    plt.figure(figsize=(10, 6))
-    plt.hist(scores, bins=bins, color='blue', alpha=0.7)
-    plt.title(title)
-    plt.xlabel('NMI Score')
-    plt.ylabel('Frequency')
-    plt.show()
-
-
-def plot_comparison_nmi(S_lists):
-    fig, ax = plt.subplots(figsize=(12, 6))
-    all_original_scores = []
-    all_permuted_scores = []
-
-    # Compute and collect NMI scores for each set of components
-    for S_list in S_lists:
-        original_scores = [calculate_NMI(np.array(S_list[i]), np.array(S_list[(i + 1) % len(S_list)])) for i in range(len(S_list))]
-        all_original_scores.append(original_scores)
-        
-        permuted_scores = permute_and_calculate_NMI(S_list)
-        permuted_scores_flat = [item for sublist in permuted_scores for item in sublist]
-        all_permuted_scores.append(permuted_scores_flat)
-
-    n_components = len(S_lists)
-    positions = np.arange(1, n_components + 1)
-
-    # Plotting original scores directly over the ticks
-    ax.boxplot(all_original_scores, positions=positions, widths=0.3, patch_artist=True, 
-               boxprops=dict(facecolor='lightblue'), labels=['Original']*n_components)
-
-    # Plotting permuted scores directly over the ticks, slightly offset
-    ax.boxplot(all_permuted_scores, positions=positions, widths=0.3, patch_artist=True, 
-               boxprops=dict(facecolor='lightgreen'), labels=['Permuted']*n_components)
-
-    ax.set_title('Comparison of NMI Scores: Original vs Permuted')
-    ax.set_xlabel('Number of Components')
-    ax.set_ylabel('NMI Scores')
-    ax.set_xticks(positions)
-    ax.set_xticklabels([i for i in positions])
-    plt.legend(['Original', 'Permuted'])
-    plt.grid(True)
-    plt.show()
