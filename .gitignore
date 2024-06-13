@@ -3,6 +3,7 @@ __pycache__/
 *.pyo
 *.npy
 *.egg-info/
+*.pkl
 config.json
 config_old.json
 data/*

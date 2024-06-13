@@ -92,7 +92,7 @@ def load_and_process_data(normalize=True, data_path=None, lab="all", verbose=Tru
         for mouse in data['unique_id'].unique():
             mouse_data = data[data['unique_id'] == mouse]
             for feature in eeg_features:
-                    data.loc[mouse_data.index, feature] = scaler.fit_transform(mouse_data[[feature]])
+                data.loc[mouse_data.index, feature] = scaler.fit_transform(mouse_data[[feature]])
 
         df_standardized_3std = data.copy()
 
