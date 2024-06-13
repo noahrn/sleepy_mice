@@ -5,7 +5,7 @@ import json
 from sklearn.preprocessing import StandardScaler
 
 # Seeding
-np.random.seed(0)
+#np.random.seed(0)
 
 # EEG features
 eeg_features = ['slowdelta', 'fastdelta', 'slowtheta', 'fasttheta', 'alpha', 'beta', 'rms']
@@ -53,25 +53,26 @@ def load_and_process_data(normalize=True, data_path=None, lab="all", verbose=Tru
             else:
                 print(f"Normalizing data for lab {lab}...")
                 
-        scaler = StandardScaler()
+        # identify data points that are more than 3 stdv away from the mean for each feature
+        all_outliers = []
         for mouse in data['unique_id'].unique():
             mouse_data = data[data['unique_id'] == mouse]
-            for feature in eeg_features:
-                data.loc[mouse_data.index, feature] = scaler.fit_transform(mouse_data[[feature]])
-        df_standardized_3std = data.copy()
-        
-        # remove data points that are more than 3 stdv away from the mean for each EEG feature
-        all_outliers = []
-        for mouse in df_standardized_3std['unique_id'].unique():
-            mouse_data = df_standardized_3std[df_standardized_3std['unique_id'] == mouse]
             for feature in eeg_features:
                 is_within_3_std = np.abs(mouse_data[feature] - mouse_data[feature].mean()) <= 3 * mouse_data[feature].std()
                 outliers = mouse_data[~is_within_3_std].index
                 all_outliers.extend(outliers)
 
-        
-        # Drop rows with NaN values after outlier removal
-        df_standardized_3std.drop(all_outliers, inplace=True)
+        # remove all observations that have outliers
+        data.drop(all_outliers, inplace=True)
+
+        # standardize for each mouse for each feature independently
+        scaler = StandardScaler()
+        for mouse in data['unique_id'].unique():
+            mouse_data = data[data['unique_id'] == mouse]
+            for feature in eeg_features:
+                data.loc[mouse_data.index, feature] = scaler.fit_transform(mouse_data[[feature]])
+
+        df_standardized_3std = data.copy()
 
         if verbose:
             if lab == 'all':
