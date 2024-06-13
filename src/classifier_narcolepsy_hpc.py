@@ -31,7 +31,7 @@ mpl.rcParams.update({
 
 # modularized data load
 data = load_and_process_data(normalize=True, lab="all", narcolepsy=True)
-data = data.sample(frac=1).reset_index(drop=True)
+data = data.sample(frac=0.05).reset_index(drop=True)
 print("Data loaded and normalized with shape:", data.shape)
 
 # lab label to be predicted
@@ -52,7 +52,7 @@ def process_and_classify(narcoleptic, K):
     for _ in range(10):  # 10 iteration for each K
         model = AA(X=data_tensor, num_comp=K, model='AA', verbose=False)
         optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
-        loss, _ = Optimizationloop(model=model, optimizer=optimizer, max_iter=100, tol=1e-6, disable_output=False)
+        loss, _ = Optimizationloop(model=model, optimizer=optimizer, max_iter=10000, tol=1e-6, disable_output=False)
         
         C, S = model.get_model_params()
         C, S = C.cpu().detach().numpy(), S.cpu().detach().numpy()
@@ -60,8 +60,8 @@ def process_and_classify(narcoleptic, K):
         X_train, X_test, y_train, y_test = train_test_split(S.T, narcoleptic, test_size=0.2)
         
         # using LGBM for gpu acceleration for hpc
-        #classifier = LGBMClassifier(boosting_type='rf', n_estimators=100, bagging_freq=1, bagging_fraction=0.8, feature_fraction=0.8, verbose=-1)
-        classifier = RandomForestClassifier(n_estimators=100)
+        classifier = LGBMClassifier(boosting_type='rf', n_estimators=100, bagging_freq=1, bagging_fraction=0.8, feature_fraction=0.8, verbose=-1)
+        #classifier = RandomForestClassifier(n_estimators=100)
         classifier.fit(X_train, y_train)
         predictions = classifier.predict(X_test)
         accuracy = accuracy_score(y_test, predictions)

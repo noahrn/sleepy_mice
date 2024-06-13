@@ -3,8 +3,8 @@ import os
 import torch
 import random
 import numpy as np
-#from lightgbm import LGBMClassifier
-from sklearn.ensemble import RandomForestClassifier
+from lightgbm import LGBMClassifier
+#from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
@@ -28,10 +28,9 @@ mpl.rcParams.update({
     'grid.alpha': 0.7,
     'errorbar.capsize': 5
 })
-
 # modularized data load
 data = load_and_process_data(normalize=True, lab="all")
-data = data.sample(frac=0.01).reset_index(drop=True)
+data = data.sample(frac=1).reset_index(drop=True)
 print("Data loaded and normalized with shape:", data.shape)
 
 # lab label to be predicted
@@ -52,7 +51,7 @@ def process_and_classify(labels, K):
     for _ in range(10):  # 10 iteration for each K
         model = AA(X=data_tensor, num_comp=K, model='AA', verbose=False)
         optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
-        loss, _ = Optimizationloop(model=model, optimizer=optimizer, max_iter=100, tol=1e-6, disable_output=False)
+        loss, _ = Optimizationloop(model=model, optimizer=optimizer, max_iter=10000, tol=1e-6, disable_output=False)
         
         C, S = model.get_model_params()
         C, S = C.cpu().detach().numpy(), S.cpu().detach().numpy()
@@ -60,7 +59,7 @@ def process_and_classify(labels, K):
         X_train, X_test, y_train, y_test = train_test_split(S.T, labels, test_size=0.2)
         
         # using LGBM for gpu acceleration for hpc
-        classifier = LGBMClassifier(boosting_type='rf', n_estimators=100, random_state=0, bagging_freq=1, bagging_fraction=0.8, feature_fraction=0.8, verbose=-1)
+        classifier = LGBMClassifier(boosting_type='rf', n_estimators=100, bagging_freq=1, bagging_fraction=0.8, feature_fraction=0.8, verbose=-1)
         #classifier = RandomForestClassifier(n_estimators=100)
         classifier.fit(X_train, y_train)
         predictions = classifier.predict(X_test)
@@ -98,7 +97,7 @@ plt.xlabel('Number of Components (K)')
 plt.ylabel('Mean Accuracy')
 #plt.title('Bar Plot of Accuracy vs. K')
 plt.grid(True)
-plt.savefig('accuracy_bar_plot.png')
+#plt.savefig('accuracy_bar_plot.png')
 
 plt.subplot(1, 2, 2)
 plt.plot(K_values, mean_accuracies, marker='o', linestyle='-', color='steelblue')
@@ -107,7 +106,7 @@ plt.xlabel('Number of Components (K)')
 plt.ylabel('Mean Accuracy')
 #plt.title('Line Plot of Mean Accuracies')
 plt.grid(True)
-plt.savefig('mean_accuracy_line_plot.png') 
+#plt.savefig('mean_accuracy_line_plot.png') 
 
 plt.tight_layout()
 plt.show()
