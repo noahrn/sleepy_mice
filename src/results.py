@@ -6,10 +6,12 @@ from tqdm import tqdm
 from CGD import AA_model, AA_trainer
 
 # Load and process data
-df = load_and_process_data(normalize=True, lab="1")
+df = load_and_process_data(normalize=False, lab="all")
+df['logrms'] = np.log1p(df['rms'])
+df.insert(7, 'logrms', df.pop('logrms'))
 
 # only keep ["slowdelta", "fastdelta", "slowtheta", "fasttheta", "alpha", "beta", "rms", "sleepstage"]
-X = df.drop(columns=['mouseID', 'lab', 'sleepstage', 'epoch', 'unique_id'])
+X = df.drop(columns=['mouseID', 'lab', 'sleepstage', 'epoch', 'unique_id','rms'])
 y = df['sleepstage']
 X = X.to_numpy()
 y = y.to_numpy()
@@ -24,7 +26,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 data = torch.tensor(X).to(device)
 
 # Fit the model for archetypes K
-K_list = [2, 3]
+K_list = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 C_list_list = [[] for _ in range(len(K_list))]
 S_list_list = [[] for _ in range(len(K_list))]
