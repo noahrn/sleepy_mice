@@ -55,14 +55,15 @@ class AA(torch.nn.Module):
         residual = self.X - self.X @ G_soft @ S_soft
         #residual_squared = torch.linalg.norm(residual, ord='fro') ** 2
         #weighted_loss = torch.sum(residual_squared)
-
-        residual_squared =  torch.sum(torch.sum((residual**2) * self.class_weights, dim=1))
-        residual_normalized = torch.sum(torch.log(torch.sum((residual**2) * self.class_weights, dim=1)))
         
+        #print(torch.sum((residual**2), dim=1))
+        #print(torch.sum((residual**2) * self.class_weights, dim=1))
+
         if self.noise_term:
-            loss = residual_normalized
+            loss = torch.sum(torch.log(torch.sum((residual**2) * self.class_weights + 1e-10, dim=1)))
         else:
-            loss = residual_squared
+            loss = torch.sum((residual**2) * self.class_weights)
+
             
         if torch.isnan(loss):
             raise ValueError('Loss is NaN')
