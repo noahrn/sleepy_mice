@@ -31,11 +31,15 @@ mpl.rcParams.update({
 
 # modularized data load
 data = load_and_process_data(normalize=True, lab="all", narcolepsy=True)
-data = data.sample(frac=0.05).reset_index(drop=True)
+
+# bias
+data['logrms'] = np.log1p(data['rms'])
+data.insert(7, 'logrms', data.pop('logrms'))
+
+# shuffle
+data = data.sample(frac=1).reset_index(drop=True)
 print("Data loaded and normalized with shape:", data.shape)
 
-# lab label to be predicted
-narcoleptic = data['narcolepsy'].values
 
 # frequency bands + rms
 features = ['slowdelta', 'fastdelta', 'slowtheta', 'fasttheta', 'alpha', 'beta', 'rms']
