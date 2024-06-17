@@ -2,13 +2,14 @@ import torch
 from time import time
 
 class AA(torch.nn.Module):
-    def __init__(self, num_comp, X, class_weights=None, model="AA", init=None, verbose=False):
+    def __init__(self, num_comp, X, class_weights=None, noise_term=True, model="AA", init=None, verbose=False):
         super().__init__()
         if verbose:
             print('Initializing model: ' + model)
             t1 = time()
 
         self.model = model
+        self.noise_term = noise_term
 
         K = num_comp
         P = X.shape[-1]
@@ -58,8 +59,12 @@ class AA(torch.nn.Module):
         residual_squared =  torch.sum(torch.sum((residual**2) * self.class_weights, dim=1))
         residual_normalized = torch.sum(torch.log(torch.sum((residual**2) * self.class_weights, dim=1)))
         
-
-        if torch.isnan(residual_normalized):
+        if self.noise_term:
+            loss = residual_normalized
+        else:
+            loss = residual_squared
+            
+        if torch.isnan(loss):
             raise ValueError('Loss is NaN')
         
-        return residual_normalized
+        return loss
