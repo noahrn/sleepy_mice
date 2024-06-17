@@ -29,15 +29,23 @@ mpl.rcParams.update({
     'errorbar.capsize': 5
 })
 # modularized data load
-data = load_and_process_data(normalize=True, lab="all")
+data = load_and_process_data(normalize=False, lab="all")
+
+# bias (logrms)
+biases = [1, 3, 6]
+data['logrms'] = np.log1p(data['rms']) / biases[i]
+data.insert(7, 'logrms', data.pop('logrms'))
+
+# shuffle
 data = data.sample(frac=1).reset_index(drop=True)
+print(data)
 print("Data loaded and normalized with shape:", data.shape)
 
 # lab label to be predicted
 labs = data['lab'].values
 
-# frequency bands + rms
-features = ['slowdelta', 'fastdelta', 'slowtheta', 'fasttheta', 'alpha', 'beta', 'rms']
+# frequency bands + logrms
+features = ['slowdelta', 'fastdelta', 'slowtheta', 'fasttheta', 'alpha', 'beta', 'logrms']
 data = data[features]
 
 # convert to tensor & use gpu if available
@@ -49,7 +57,7 @@ print("Transposed data tensor shape (before model):", data_tensor.shape)
 def process_and_classify(labels, K):
     accuracies = []
     for _ in range(10):  # 10 iteration for each K
-        model = AA(X=data_tensor, num_comp=K, model='AA', verbose=False)
+        model = AA(X=data_tensor, num_comp=K, noise_term=True, model='AA', verbose=False)
         optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
         loss, _ = Optimizationloop(model=model, optimizer=optimizer, max_iter=10000, tol=1e-6, disable_output=False)
         
@@ -72,6 +80,10 @@ K_values = range(2, 11)
 mean_accuracies = []
 std_accuracies = []
 
+# baseline definition
+lab_counts = data['lab'].value_counts(normalize=True)
+baseline = lab_counts.max()
+
 # Open a file to write the results
 with open('model_accuracy_statistics.txt', 'w') as file:
     file.write("K, Mean Accuracy, Standard Deviation\n")
@@ -90,23 +102,14 @@ with open('model_accuracy_statistics.txt', 'w') as file:
         print(f"Mean Accuracy: {mean_acc}, Standard Deviation: {std_acc}")
 
 # Plots
-plt.figure(figsize=(14, 7))
-plt.subplot(1, 2, 1)
-plt.bar(K_values, mean_accuracies, yerr=std_accuracies, color='skyblue', alpha=0.8)
-plt.xlabel('Number of Components (K)')
-plt.ylabel('Mean Accuracy')
-#plt.title('Bar Plot of Accuracy vs. K')
-plt.grid(True)
-#plt.savefig('accuracy_bar_plot.png')
-
-plt.subplot(1, 2, 2)
+plt.figure(figsize=(7, 7))
 plt.plot(K_values, mean_accuracies, marker='o', linestyle='-', color='steelblue')
 plt.fill_between(K_values, np.array(mean_accuracies) - np.array(std_accuracies), np.array(mean_accuracies) + np.array(std_accuracies), color='steelblue', alpha=0.2)
+plt.axhline(y=baseline, color='r', linestyle='--')
 plt.xlabel('Number of Components (K)')
 plt.ylabel('Mean Accuracy')
 #plt.title('Line Plot of Mean Accuracies')
 plt.grid(True)
 #plt.savefig('mean_accuracy_line_plot.png') 
-
 plt.tight_layout()
 plt.show()
