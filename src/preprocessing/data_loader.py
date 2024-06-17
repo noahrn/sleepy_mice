@@ -62,6 +62,24 @@ def load_and_process_data(normalize=True, data_path=None, lab="all", verbose=Tru
     # remove lab 4
     data = data[data['lab'] != 4.0]
 
+    if verbose:
+        if lab == 'all':
+            print("Normalizing data for all labs...")
+        else:
+            print(f"Normalizing data for lab {lab}...")
+                
+    # identify data points that are more than 3 stdv away from the mean for each feature
+    all_outliers = []
+    for mouse in data['unique_id'].unique():
+        mouse_data = data[data['unique_id'] == mouse]
+        for feature in eeg_features:
+            is_within_3_std = np.abs(mouse_data[feature] - mouse_data[feature].mean()) <= 3 * mouse_data[feature].std()
+            outliers = mouse_data[~is_within_3_std].index
+            all_outliers.extend(outliers)
+
+    # remove all observations that have outliers
+    data.drop(all_outliers, inplace=True)
+
     # filter by lab
     if lab != 'all':
         labs = [float(l) for l in lab.split(',')]
@@ -70,24 +88,6 @@ def load_and_process_data(normalize=True, data_path=None, lab="all", verbose=Tru
         labs = data['lab'].unique()
 
     if normalize:
-        if verbose:
-            if lab == 'all':
-                print("Normalizing data for all labs...")
-            else:
-                print(f"Normalizing data for lab {lab}...")
-                
-        # identify data points that are more than 3 stdv away from the mean for each feature
-        all_outliers = []
-        for mouse in data['unique_id'].unique():
-            mouse_data = data[data['unique_id'] == mouse]
-            for feature in eeg_features:
-                is_within_3_std = np.abs(mouse_data[feature] - mouse_data[feature].mean()) <= 3 * mouse_data[feature].std()
-                outliers = mouse_data[~is_within_3_std].index
-                all_outliers.extend(outliers)
-
-        # remove all observations that have outliers
-        data.drop(all_outliers, inplace=True)
-
         # standardize for each mouse for each feature independently
         scaler = StandardScaler()
         for mouse in data['unique_id'].unique():

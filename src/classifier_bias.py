@@ -29,7 +29,7 @@ print("Data loaded with shape:", y2.shape)
 # define classification
 def classifier(S_lists, labels, model_type='LGBM'):
     accuracies = []
-    for i in tqdm(range(iterations), desc="Classifier loop"):
+    for i in tqdm(range(iterations), desc="Classifier-Loop"):
     #for i in range(iterations):
         # Classification setup 
         X_train, X_test, y_train, y_test = train_test_split(S_lists, labels, test_size=0.2, random_state=iterations)
@@ -41,7 +41,7 @@ def classifier(S_lists, labels, model_type='LGBM'):
             classifier = RandomForestClassifier(n_estimators=100)
         
         elif model_type == 'XGBoost':
-            classifier = xgb.XGBClassifier(n_estimators=10)
+            classifier = xgb.XGBClassifier(n_estimators=100)
         
         else:
             raise ValueError("Invalid model type. Choose 'LGBM', 'RF' or 'XGBoost'.")
@@ -50,7 +50,7 @@ def classifier(S_lists, labels, model_type='LGBM'):
         predictions = classifier.predict(X_test)
         accuracies.append(accuracy_score(y_test, predictions))
 
-    return np.mean(accuracies), np.std(accuracies)
+    return accuracies
 
 # set global parameters for plotting
 plt.rcParams.update({
@@ -88,7 +88,7 @@ results = {}
 # parameters
 chosen_model = 'XGBoost' # LightGBM, RF or XGBooster
 labels = y2 # y for sleepstages or y2 for labs
-iterations = 1 # num of classifier iterations
+iterations = 5 # num of classifier iterations
 
 S_lists[0][0] # first index is K, second is the iteration up to 5
 
@@ -103,15 +103,15 @@ def main():
     results = {}     
     print("Chosen model:", chosen_model)
     for K in tqdm(range(2, 11), desc="K-Loop"):
-        accuracies = []
-        std_devs = []
-        for j in range(iterations):
-            mean_acc, std_acc = classifier(S_lists[K-2][j].T, labels=labels, model_type=chosen_model)
-            accuracies.append(mean_acc)
-            std_devs.append(std_acc)
+        accuracies_list = []
+        for j in tqdm(range(5), desc = "Iteration-Loop"):
+            accuricies = classifier(S_lists[K-2][j].T, labels=labels, model_type=chosen_model)
+            accuracies_list.append(accuricies)
 
         # store mean and standard deviation in results dictionary for current K
-        results[K] = (np.mean(accuracies), np.mean(std_devs))
+        accuracies_list = np.array(accuracies_list).flatten()
+        print(accuracies_list)
+        results[K] = (np.mean(accuracies_list), np.std(accuracies_list))
         print(f"For K={K}, Mean Accuracy: {results[K][0]}, Standard Deviation: {results[K][1]}")
 
     # plot
