@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import ConvexHull
 from sklearn.decomposition import PCA
+from tqdm import tqdm
 
 def plot_AA(X: np.ndarray, C: np.ndarray, S: np.ndarray, K: int, loss: np.ndarray, labels: np.ndarray):
     """
@@ -321,7 +322,7 @@ def plot_AA_reconstructed_angles_multiple(X: np.ndarray, Cs: list, Ss: list, Ks:
 
 from matplotlib.colors import ListedColormap, Normalize
 
-def plot_AA_reconstructed_angles_multiple_sep(X: np.ndarray, Cs: list, Ss: list, Ks: list, y: np.ndarray, point_size: int=10):
+def plot_AA_reconstructed_angles_multiple_sep(X: np.ndarray, Cs: list, Ss: list, Ks: list, y: np.ndarray, point_size: int=10, alpha: float=0.5):
     """
     Params:
         X: np.ndarray, shape (D, N)
@@ -336,6 +337,8 @@ def plot_AA_reconstructed_angles_multiple_sep(X: np.ndarray, Cs: list, Ss: list,
             Labels of the data points
         point_size: int
             Size of the data points
+        alpha: float
+            Transparency of the data points
     """
     # Number of subplots
     num_plots = len(Ks)
@@ -370,10 +373,10 @@ def plot_AA_reconstructed_angles_multiple_sep(X: np.ndarray, Cs: list, Ss: list,
             ax.set_axis_off()
 
             if row == 0:
-                scatter = ax.scatter(sorted_reconstruction[0, :], sorted_reconstruction[1, :], c=y, cmap=cmap, norm=norm, s=point_size)
+                ax.scatter(sorted_reconstruction[0, :], sorted_reconstruction[1, :], c=y, cmap=cmap, norm=norm, s=point_size, alpha=alpha)
             else:
                 mask = y == row
-                ax.scatter(sorted_reconstruction[0, mask], sorted_reconstruction[1, mask], c=y[mask], cmap=cmap, norm=norm, s=point_size)
+                ax.scatter(sorted_reconstruction[0, mask], sorted_reconstruction[1, mask], c=y[mask], cmap=cmap, norm=norm, s=point_size, alpha=alpha)
             
             ax.scatter(sorted_archetypes[0, :], sorted_archetypes[1, :], c='r', s=40, zorder=2)
             for k in range(K):
@@ -384,7 +387,81 @@ def plot_AA_reconstructed_angles_multiple_sep(X: np.ndarray, Cs: list, Ss: list,
     plt.show()
 
 
-def pca_plot_AA(X: np.ndarray, C_list: list, S_list: list, K_list: list, y: np.ndarray):
+import pandas as pd
+import datashader as ds
+import datashader.transfer_functions as tf
+from datashader.colors import viridis
+from datashader.colors import rgb
+
+def datashader_plot_AA_reconstructed_angles_multiple_sep(X, Cs, Ss, Ks, y, plot_size=800):
+    num_plots = len(Ks)
+    num_rows = 4  # All labels, then each label separately
+
+    unique_labels = np.unique(y)
+    color_key = {
+        unique_labels[0]: '#440154',  # purple
+        unique_labels[1]: '#21918c',  # cyan
+        unique_labels[2]: '#fde725'   # yellow
+    }
+
+    fig, axes = plt.subplots(num_rows, num_plots, figsize=(5 * num_plots, 5 * num_rows))
+
+    for idx, (C, S, K) in enumerate(zip(Cs, Ss, Ks)):
+        for row in range(num_rows):
+            xs, ys = np.cos(2 * np.pi / K * np.arange(K) + np.pi / 2) * 0.4 + 0.5, np.sin(2 * np.pi / K * np.arange(K) + np.pi / 2) * 0.4 + 0.5
+            archetypes = np.stack((xs, ys))
+
+            # Use PCA from scikit-learn
+            pca = PCA(n_components=2)
+            XCS = X @ C @ S
+            XC = X @ C
+
+            XCS_pca = pca.fit_transform(XCS.T)
+            XC_pca = pca.transform(XC.T)
+            angles = (np.arctan2(XC_pca[:, 1], XC_pca[:, 0]) + 2 * np.pi) % (2 * np.pi)
+            sorted_indices = np.argsort(angles)
+            final_indices = np.argsort(sorted_indices)
+
+            sorted_archetypes = archetypes[:, final_indices]
+            sorted_reconstruction = sorted_archetypes @ S
+
+            ax = axes[row, idx]
+            ax.set_aspect('equal')
+            ax.set_axis_off()
+
+            if row == 0:
+                df = pd.DataFrame({'x': sorted_reconstruction[0, :], 'y': sorted_reconstruction[1, :], 'label': y})
+                df['label'] = df['label'].astype('category')
+                cvs = ds.Canvas(plot_width=plot_size, plot_height=plot_size, x_range=(sorted_reconstruction[0, :].min(), sorted_reconstruction[0, :].max()), y_range=(sorted_reconstruction[1, :].min(), sorted_reconstruction[1, :].max()))
+                agg = cvs.points(df, 'x', 'y', ds.count_cat('label'))
+                img = tf.shade(agg, color_key=color_key, how='eq_hist')
+                ax.imshow(img.to_pil(), extent=(sorted_reconstruction[0, :].min(), sorted_reconstruction[0, :].max(), sorted_reconstruction[1, :].min(), sorted_reconstruction[1, :].max()), origin='upper')
+            else:
+                label = unique_labels[row - 1]
+                mask = y == label
+                df = pd.DataFrame({'x': sorted_reconstruction[0, mask], 'y': sorted_reconstruction[1, mask], 'label': y[mask]})
+                df['label'] = df['label'].astype('category')
+                cvs = ds.Canvas(plot_width=plot_size, plot_height=plot_size, x_range=(sorted_reconstruction[0, :].min(), sorted_reconstruction[0, :].max()), y_range=(sorted_reconstruction[1, :].min(), sorted_reconstruction[1, :].max()))
+                agg = cvs.points(df, 'x', 'y', ds.count_cat('label'))
+                img = tf.shade(agg, color_key={label: color_key[label]}, how='eq_hist')
+                ax.imshow(img.to_pil(), extent=(sorted_reconstruction[0, :].min(), sorted_reconstruction[0, :].max(), sorted_reconstruction[1, :].min(), sorted_reconstruction[1, :].max()), origin='upper')
+
+
+            # Overlay the archetype points and labels
+            ax.scatter(sorted_archetypes[0, :], sorted_archetypes[1, :], c='r', s=40, zorder=3)
+            for k in range(K):
+                ax.text(sorted_archetypes[0, k], sorted_archetypes[1, k], str(k + 1), fontsize=12, color='black', verticalalignment='bottom', horizontalalignment='right')
+
+            ax.set_title(f"K={K} (Label {row if row > 0 else 'All'})")
+
+    print("Showing plot...")
+    plt.tight_layout()
+    plt.show()
+
+
+
+
+def pca_plot_AA(X: np.ndarray, C_list: list, S_list: list, K_list: list, y: np.ndarray, point_size: 2):
     """
     Params:
         X: np.ndarray, shape (D, N)
@@ -395,6 +472,10 @@ def pca_plot_AA(X: np.ndarray, C_list: list, S_list: list, K_list: list, y: np.n
             List of mixing matrices
         K_list: list of int
             List of numbers of components
+        y: np.ndarray, shape (N,)
+            Labels of the data points
+        point_size: float
+            Size of the data points
     Returns:
         Plots the:
         1: PCA plot of the data points colored by class
@@ -428,7 +509,6 @@ def pca_plot_AA(X: np.ndarray, C_list: list, S_list: list, K_list: list, y: np.n
         angles = (np.arctan2(XC_pca[:,1],XC_pca[:,0]) + 2*np.pi) % (2*np.pi)
         
         # Plot on PCA, use y to cut the scatter
-        point_size = 2
         ax.scatter(XCS_pca[y==1,0],XCS_pca[y==1,1],c=y[y==1],cmap=cmap,norm=norm,s=point_size)
         ax.scatter(XCS_pca[y==2,0],XCS_pca[y==2,1],c=y[y==2],cmap=cmap,norm=norm,s=point_size)
         ax.scatter(XCS_pca[y==3,0],XCS_pca[y==3,1],c=y[y==3],cmap=cmap,norm=norm,s=point_size)

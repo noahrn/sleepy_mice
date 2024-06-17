@@ -68,4 +68,12 @@ class AA(torch.nn.Module):
         if torch.isnan(loss):
             raise ValueError('Loss is NaN')
         
+<<<<<<< HEAD
         return loss
+=======
+<<<<<<< HEAD
+        return loss
+=======
+        return loss
+>>>>>>> new_classifiers
+>>>>>>> main
