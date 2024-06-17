@@ -3,15 +3,19 @@ import os
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
-from lightgbm import LGBMClassifier
+#from lightgbm import LGBMClassifier
+import xgboost as xgb
+from sklearn.ensemble import RandomForestClassifier 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+import pickle
 
 from CGD import AA, Optimizationloop
 from preprocessing.data_loader import load_and_process_data
 
-# Load data
-data = load_and_process_data(normalize=False, lab="all")
+# import s-matrices
+with open('s_matrices.pkl', 'rb') as file:
+    s_matrices = pickle.load(file)
 
 # Set global parameters for plotting
 plt.rcParams.update({
@@ -29,45 +33,55 @@ plt.rcParams.update({
     'errorbar.capsize': 5
 })
 
-# Setup device for PyTorch
+# gpu if available
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# Define features and prepare tensor
-features = ['slowdelta', 'fastdelta', 'slowtheta', 'fasttheta', 'alpha', 'beta']
-labs = data['lab'].values
+# load data
+X, y, y2 = pickle.load(open('data/15-6-24/1_a1an/info_list_20240615-220830.pkl', 'rb'))
+S_lists = pickle.load(open('data/15-6-24/1_a1an/S_lists_20240615-220830.pkl', 'rb'))
+C_lists = pickle.load(open('data/15-6-24/1_a1an/C_lists_20240615-220830.pkl', 'rb'))
 
-# Prepare data tensor
-def prepare_tensor(data, bias):
-    data['logrms'] = np.log1p(data['rms']) / bias
-    feature_data = data[features + ['logrms']]
-    tensor = torch.tensor(feature_data.values, dtype=torch.float32).to(device)
-    return tensor.to(dtype=torch.float64).transpose(0, 1)
+X = np.array(X) # X-data
+y = np.array(y) # sleepstage per datapoint
+y2 = np.array(y2) # labs per datapoint
 
-# Define the processing and classification function
-def process_and_classify(tensor_data, labels, K, noise, model_count):
+labels = y2 # y or y2
+
+# define classification
+def classifier(labels, model_count, model_type='LGBM'):
     accuracies = []
     for i in range(10):
-        print(f"Model {model_count} of 540: Noise={noise}, Bias={current_bias}, K={K}, Run={i+1}/10")
-        model_count += 1
-        model = AA(X=tensor_data, num_comp=K, noise_term=noise, model='AA', verbose=False)
-        optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
-        loss, _ = Optimizationloop(model=model, optimizer=optimizer, max_iter=10000, tol=1e-6, disable_output=True)
-        
-        C, S = model.get_model_params()
-        C, S = C.cpu().detach().numpy(), S.cpu().detach().numpy()
-        
-        X_train, X_test, y_train, y_test = train_test_split(S.T, labels, test_size=0.2)
-        classifier = LGBMClassifier(boosting_type='rf', n_estimators=100, bagging_freq=1, bagging_fraction=0.8, feature_fraction=0.8, verbose=-1)
-        classifier.fit(X_train, y_train)
-        predictions = classifier.predict(X_test)
-        accuracies.append(accuracy_score(y_test, predictions))
+        # Classification setup - RF or XGBosoter
+        if model_type == 'LGBM':
+            X_train, X_test, y_train, y_test = train_test_split(X, labels, test_size=0.2, random_state=i)
+            classifier = LGBMClassifier(boosting_type='rf', n_estimators=100, bagging_freq=1, bagging_fraction=0.8, feature_fraction=0.8, verbose=-1)
+            classifier.fit(X_train, y_train)
+            predictions = classifier.predict(X_test)
+            accuracies.append(accuracy_score(y_test, predictions))
+
+        if model_type == 'RF':
+            X_train, X_test, y_train, y_test = train_test_split(X, labels, test_size=0.2, random_state=i)
+            classifier = RandomForestClassifier(n_estimators=100)
+            classifier.fit(X_train, y_train)
+            predictions = classifier.predict(X_test)
+            accuracies.append(accuracy_score(y_test, predictions))
+
+        if model_type == 'XGBoost':
+            X_train, X_test, y_train, y_test = train_test_split(X, labels, test_size=0.2, random_state=i)
+            classifier = xgb.XGBClassifier(objective="multi:softmax", num_classes=5, n_estimators=100)
+            classifier.fit(X_train, y_train)
+            predictions = classifier.predict(X_test)
+            accuracies.append(accuracy_score(y_test, predictions))
+
+        else:
+            raise ValueError("Invalid model type. Choose 'RF' or 'XGBoost'.")
+
     return np.mean(accuracies), np.std(accuracies), model_count
 
-# Main loops
-noise_terms = [True, False]
-biases = [1, 3, 6]
-K_values = range(2, 11)
-model_count = 1  # Initialize model count
+# main loop
+model_count = 1  # for tracking
+
+chosen_model = 'XGBoost' # RF or XGBooster
 
 results = {}
 for noise in noise_terms:
@@ -76,18 +90,18 @@ for noise in noise_terms:
         accuracies, std_devs = [], []
         
         for K in K_values:
-            mean_acc, std_acc, model_count = process_and_classify(tensor_data, labs, K, noise, model_count)
+            mean_acc, std_acc, model_count = process_and_classify(tensor_data, labs, K, noise, model_count, model_type=chosen_model)
             accuracies.append(mean_acc)
             std_devs.append(std_acc)
         
         results[(noise, current_bias)] = (accuracies, std_devs)
         
-        # Create a new figure for each combination of noise and bias
+        # new figure for each combination of noise and bias
         plt.figure()
         plt.plot(K_values, accuracies, marker='o', linestyle='-', label=f'Noise={noise}, Bias={current_bias}')
         plt.fill_between(K_values, np.array(accuracies) - np.array(std_devs), np.array(accuracies) + np.array(std_devs), alpha=0.2)
         
-        # Add labels, title, grid, and legend for each plot
+        # plot definitions
         plt.xlabel('Number of Components (K)')
         plt.ylabel('Mean Accuracy')
         plt.title(f'Mean Accuracies (Noise={noise}, Bias={current_bias})')
@@ -96,7 +110,7 @@ for noise in noise_terms:
         plt.savefig(f'mean_accuracy_plot_noise={noise}_bias={current_bias}.png')
         plt.close()
 
-# Write results to a file
+# save accuracies and stdv
 with open('model_accuracy_statistics.txt', 'w') as file:
     file.write("Noise, Bias, K, Mean Accuracy, Standard Deviation\n")
     for key, (accs, stds) in results.items():
