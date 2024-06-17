@@ -60,7 +60,7 @@ class AA(torch.nn.Module):
         #print(torch.sum((residual**2) * self.class_weights, dim=1))
 
         if self.noise_term:
-            loss = torch.sum(torch.log(torch.sum((residual**2) * self.class_weights + 1e-10, dim=1)))
+            loss = torch.sum(torch.log(torch.sum((residual**2) * self.class_weights, dim=1) + 1e-10))
         else:
             loss = torch.sum((residual**2) * self.class_weights)
 
