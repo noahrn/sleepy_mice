@@ -27,7 +27,7 @@ def load_data(data_path, verbose=True):
     data = pd.read_csv(data_path)
     return data
 
-def load_and_process_data(normalize=True, data_path=None, lab="all", verbose=True, narcolepsy=False):
+def load_and_process_data(remove_outliers = True, normalize=True, data_path=None, lab="all", verbose=True, narcolepsy=False):
     lab = str(lab)  # convert lab to string
     data = None  # initialize data
 
@@ -67,25 +67,26 @@ def load_and_process_data(normalize=True, data_path=None, lab="all", verbose=Tru
             print("Normalizing data for all labs...")
         else:
             print(f"Normalizing data for lab {lab}...")
-                
-    # identify data points that are more than 3 stdv away from the mean for each feature
-    all_outliers = []
-    for mouse in data['unique_id'].unique():
-        mouse_data = data[data['unique_id'] == mouse]
-        for feature in eeg_features:
-            is_within_3_std = np.abs(mouse_data[feature] - mouse_data[feature].mean()) <= 3 * mouse_data[feature].std()
-            outliers = mouse_data[~is_within_3_std].index
-            all_outliers.extend(outliers)
-
-    # remove all observations that have outliers
-    data.drop(all_outliers, inplace=True)
 
     # filter by lab
     if lab != 'all':
         labs = [float(l) for l in lab.split(',')]
         data = data[data['lab'].isin(labs)]
     else:
-        labs = data['lab'].unique()
+        labs = data['lab'].unique()       
+                   
+    # identify data points that are more than 3 stdv away from the mean for each feature
+    if remove_outliers:
+        all_outliers = []
+        for mouse in data['unique_id'].unique():
+            mouse_data = data[data['unique_id'] == mouse]
+            for feature in eeg_features:
+                is_within_3_std = np.abs(mouse_data[feature] - mouse_data[feature].mean()) <= 3 * mouse_data[feature].std()
+                outliers = mouse_data[~is_within_3_std].index
+                all_outliers.extend(outliers)
+
+        # remove all observations that have outliers
+        data.drop(all_outliers, inplace=True)
 
     if normalize:
         # standardize for each mouse for each feature independently
@@ -106,5 +107,8 @@ def load_and_process_data(normalize=True, data_path=None, lab="all", verbose=Tru
         return df_standardized_3std
     else:
         if verbose:
-            print(f"Raw data successfully loaded from lab {lab}.")
+            if remove_outliers:
+                print(f"Raw data successfully loaded and outliers removed from {lab}.")
+            else:
+                print(f"Raw data successfully loaded from lab {lab}.")
         return data
