@@ -2,7 +2,7 @@ import torch
 from time import time
 
 class AA(torch.nn.Module):
-    def __init__(self, num_comp, X, class_weights=None, noise_term=True, model="AA", init=None, verbose=False):
+    def __init__(self, num_comp, X, class_weights=None, noise_term=False, model="AA", init=None, verbose=False):
         super().__init__()
         if verbose:
             print('Initializing model: ' + model)
@@ -28,8 +28,8 @@ class AA(torch.nn.Module):
             self.G = torch.nn.Parameter(self.softmaxG(-torch.log(torch.rand((P, K), dtype=torch.double))))
             self.S = torch.nn.Parameter(self.softmaxS(-torch.log(torch.rand([K, P], dtype=torch.double))))
         else:
-            self.G = init['G'].clone()
-            self.S = init['S'].clone()
+            self.G = torch.nn.Parameter(init['G'].clone().detach().requires_grad_(True))
+            self.S = torch.nn.Parameter(init['S'].clone().detach().requires_grad_(True))
 
         if verbose:
             t2 = time()
