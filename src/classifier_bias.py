@@ -17,9 +17,11 @@ from preprocessing.data_loader import load_and_process_data
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # load data
-X, y, y2 = pickle.load(open('data/matrices/all3an/info_list_20240617-203114.pkl', 'rb')) # info
-S_lists = pickle.load(open('data/matrices/all3an/S_lists_20240617-203114.pkl', 'rb')) # S-matrices
-# C_lists = pickle.load(open('data/matrices/15-6-24/1_a1an/C_lists_20240615-220830.pkl', 'rb')) # C-matrices
+with open('data/matrices/all_lab_3bias_nolog/info_list_20240617-203114.pkl', 'rb') as f: # info_list
+    contents = pickle.load(f)
+    X, y, y2 = contents[:3]  # Always take the first three elements
+
+S_lists = pickle.load(open('data/matrices/all_lab_3bias_nolog/S_lists_20240617-203114.pkl', 'rb')) # S-matrices
 
 X = np.array(X) # entire data
 y = np.array(y) # sleepstage per datapoint
@@ -87,16 +89,17 @@ results = {}
 
 # parameters
 chosen_model = 'XGBoost' # LightGBM, RF or XGBoost
-labels = y2 # y for sleepstages or y2 for labs
+labels = y-1 # y-1 for sleepstages or y2 for labs
 iterations = 1 # num of classifier iterations
 
 S_lists[0][0] # first index is K, second is the iteration up to 5
 
-y3 = y2.copy()
-y3[y2 == 5] = 4
-y3 = y3 - 1
+# only for all
+# y3 = y2.copy()
+# y3[y2 == 5] = 4
+# y3 = y3 - 1
 
-labels = y3
+# labels = y3
 
 # main 
 def main():
@@ -111,7 +114,7 @@ def main():
         # store mean and standard deviation in results dictionary for current K
         accuracies_list = np.array(accuracies_list).flatten()
         #print(accuracies_list)
-        results[K] = (np.mean(accuracies_list), np.std(accuracies_list)/np.sqrt(5))
+        results[K] = (np.mean(accuracies_list), np.std(accuracies_list, ddof=1)/np.sqrt(5))
         print(f"For K={K}, Mean Accuracy: {results[K][0]}, Standard Deviation: {results[K][1]}")
 
     # Prepare results for saving
@@ -121,8 +124,7 @@ def main():
     data_to_save = np.core.records.fromarrays([K_values, means, std_devs], names='K, mean, std')
 
     # Save the data
-    np.save('all1al_accuricies_lab.npy', data_to_save)
-    #print(accuracies_list)
+    np.save('results/all_lab_3bias_nolog_sleepstage_accuracies.npy', data_to_save)
 
     # plot
     plot_results(results)
