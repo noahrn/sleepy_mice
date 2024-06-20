@@ -469,7 +469,7 @@ def plot_comparison_nmi_one_hot_sleep(lab_S_lists, sleep_labels, title = 'Compar
                 boxprops=dict(facecolor='lightgreen'), labels=['Permuted']*n_components)
 
         # Line for the mean NMI scores
-        ax.plot(positions, np.mean(all_permuted_scores, axis=1), 'o-', color='red', label=f'{lab_name[lab]} permuted', linestyle='--')
+        ax.plot(positions, np.mean(all_permuted_scores, axis=1), 'o-', color='red', label=f'{lab_name[lab]} permuted')
    
     ax.set_title(title)
     ax.set_xlabel('Number of Components')
@@ -502,7 +502,7 @@ def plot_comparison_nmi_one_hot_labs(S_lists, lab_labels, title = 'Comparison of
     all_original_scores = []
     all_permuted_scores = []
 
-    for idx, S_list in tqdm(enumerate(S_lists)):
+    for idx, S_list in enumerate(tqdm(S_lists)):
         original_scores = [calculate_NMI(np.array(S_list[i]), one_hot_labs) for i in range(len(S_list))]
         all_original_scores.append(original_scores)
 
@@ -525,7 +525,7 @@ def plot_comparison_nmi_one_hot_labs(S_lists, lab_labels, title = 'Comparison of
                boxprops=dict(facecolor='lightgreen'), labels=['Permuted']*n_components)
     
     # Line for the mean NMI scores
-    ax.plot(positions, np.mean(all_permuted_scores, axis=1), 'o-', color=colors[0], label='Permuted', linestyle='--')
+    ax.plot(positions, np.mean(all_permuted_scores, axis=1), 'o-', color=colors[0], label='Permuted')
 
     ax.set_title(title)
     ax.set_xlabel('Number of Components')
