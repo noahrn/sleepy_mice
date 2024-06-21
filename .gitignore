@@ -8,6 +8,7 @@ config.json
 config_old.json
 data/*
 results/*
+plots/*
 !.gitignore
 .DS_Store
 src/test.ipynb

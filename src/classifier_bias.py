@@ -8,6 +8,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import pickle
 from tqdm import tqdm
+import matplotlib.pyplot as plt
+
 
 # modularized import
 from CGD import AA, Optimizationloop
@@ -17,16 +19,21 @@ from preprocessing.data_loader import load_and_process_data
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # load data
-with open('data/matrices/all_lab_3bias_nolog/info_list_20240617-203114.pkl', 'rb') as f: # info_list
+with open('data/matrices/narc_3_lab_1bias_nolog/info_list_20240620-163117.pkl', 'rb') as f: # info_list
     contents = pickle.load(f)
-    X, y, y2 = contents[:3]  # Always take the first three elements
-
-S_lists = pickle.load(open('data/matrices/all_lab_3bias_nolog/S_lists_20240617-203114.pkl', 'rb')) # S-matrices
+    X, y, y2, y3, y4, y5 = contents[:6]  # Always take the first three elements
+    
+S_lists = pickle.load(open('data/matrices/narc_3_lab_1bias_nolog/S_lists_20240620-163117.pkl', 'rb')) # S-matrices
 
 X = np.array(X) # entire data
 y = np.array(y) # sleepstage per datapoint
 y2 = np.array(y2) # labs per datapoint
-print("Data loaded with shape:", y2.shape)
+y3 = np.array(y3) # unique_id
+y4 = np.array(y4) # narcolepsy
+print("Unique id:", np.unique(y3))
+#y6 = np.array(y5) # loss
+#print("Unique id:", np.unique(y3))
+#print("Narcolepsy:", y4)
 
 # define classification
 def classifier(S_lists, labels, model_type='LGBM'):
@@ -89,7 +96,7 @@ results = {}
 
 # parameters
 chosen_model = 'XGBoost' # LightGBM, RF or XGBoost
-labels = y-1 # y-1 for sleepstages or y2 for labs
+labels = y3 # y-1 for sleepstages, y2 for labs, y3 for unique_id,y4 for narcolepsy
 iterations = 1 # num of classifier iterations
 
 S_lists[0][0] # first index is K, second is the iteration up to 5
@@ -124,7 +131,7 @@ def main():
     data_to_save = np.core.records.fromarrays([K_values, means, std_devs], names='K, mean, std')
 
     # Save the data
-    np.save('results/all_lab_3bias_nolog_sleepstage_accuracies.npy', data_to_save)
+    #np.save('results/narcolepsy/narc_3_lab_1bias_nolog_accuracies.npy', data_to_save)
 
     # plot
     plot_results(results)

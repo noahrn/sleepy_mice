@@ -78,7 +78,7 @@ def main():
                 data_to_save = np.core.records.fromarrays([K_values, means, std_devs], names='K, mean, std')
 
                 # Save the data
-                result_path = os.path.join(results_dir, f"{subdirname}_sleepstage_accuracies.npy")
+                result_path = os.path.join(results_dir, f"{subdirname}_accuracies.npy")
                 np.save(result_path, data_to_save)
                 print(f"Results saved to {result_path}")
 
