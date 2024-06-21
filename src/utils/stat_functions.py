@@ -157,8 +157,6 @@ def plot_comparison_nmi(S_lists, title = 'Comparison of NMI Scores: Original vs 
     This function plots a comparison of NMI scores between original and permuted S matrices for different numbers of components.
     
     """
-
-
     fig, ax = plt.subplots(figsize=(5, 3))
     all_original_scores = []
     all_permuted_scores = []
@@ -191,7 +189,6 @@ def plot_comparison_nmi(S_lists, title = 'Comparison of NMI Scores: Original vs 
     ax.set_xticklabels([i+1 for i in positions])
     plt.legend(['Original', 'Permuted'])
     plt.grid(True)
-    plt.show()
 
 
 def permute_and_calculate_self_NMI(S, num_permutations=50):
@@ -472,14 +469,13 @@ def plot_comparison_nmi_one_hot_sleep(lab_S_lists, sleep_labels, title = 'Compar
         ax.plot(positions, np.mean(all_permuted_scores, axis=1), 'o-', color='red', label=f'{lab_name[lab]} permuted')
    
     ax.set_title(title)
-    ax.set_xlabel('Number of Components')
+    ax.set_xlabel('Number of Components K')
     ax.set_ylabel('NMI Scores')
     ax.set_xticks(positions)
     ax.set_xticklabels([i+1 for i in positions])
     # Also include legend thats called "Permuted" 
     plt.legend(title='Labs', loc=loc)
     plt.grid(True)
-    plt.show()
 
 def plot_comparison_nmi_one_hot_labs(S_lists, lab_labels, title = 'Comparison of NMI(S, lab labels) scores'):
 
@@ -528,13 +524,12 @@ def plot_comparison_nmi_one_hot_labs(S_lists, lab_labels, title = 'Comparison of
     ax.plot(positions, np.mean(all_permuted_scores, axis=1), 'o-', color=colors[0], label='Permuted')
 
     ax.set_title(title)
-    ax.set_xlabel('Number of Components')
+    ax.set_xlabel('Number of Components K')
     ax.set_ylabel('NMI Scores')
     ax.set_xticks(positions)
     ax.set_xticklabels([i+1 for i in positions])
     plt.legend(title='Comparison')
     plt.grid(True)
-    plt.show()
 
 
 def plot_nmi_variance_toy():
