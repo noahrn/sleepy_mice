@@ -158,6 +158,7 @@ def plot_comparison_nmi(S_lists, title = 'Comparison of NMI Scores: Original vs 
     
     """
     fig, ax = plt.subplots(figsize=(5, 3))
+    colors = plt.cm.viridis(np.linspace(0, 1, 5))
     all_original_scores = []
     all_permuted_scores = []
 
@@ -177,17 +178,21 @@ def plot_comparison_nmi(S_lists, title = 'Comparison of NMI Scores: Original vs 
     # Plotting original scores directly over the ticks
     ax.boxplot(all_original_scores, positions=positions, widths=0.7, patch_artist=True, 
                boxprops=dict(facecolor='lightblue'), labels=['Original']*n_components)
+    
+    ax.plot(positions, np.mean(all_original_scores, axis=1), 'o-', color=colors[0], label='Original')
 
     # Plotting permuted scores directly over the ticks, slightly offset
     ax.boxplot(all_permuted_scores, positions=positions, widths=0.7, patch_artist=True, 
-               boxprops=dict(facecolor='lightgreen'), labels=['Permuted']*n_components)
+               boxprops=dict(facecolor='lightgreen'))
+
+    ax.plot(positions, np.mean(all_permuted_scores, axis=1), '--', color='red', label=f'Permuted')
 
     ax.set_title(title)
     ax.set_xlabel('Number of Components K')
     ax.set_ylabel('NMI Scores')
     ax.set_xticks(positions)
     ax.set_xticklabels([i+1 for i in positions])
-    plt.legend(['Original', 'Permuted'])
+    plt.legend()
     plt.grid(True)
 
 
@@ -466,7 +471,7 @@ def plot_comparison_nmi_one_hot_sleep(lab_S_lists, sleep_labels, title = 'Compar
                 boxprops=dict(facecolor='lightgreen'), labels=['Permuted']*n_components)
 
         # Line for the mean NMI scores
-        ax.plot(positions, np.mean(all_permuted_scores, axis=1), 'o-', color='red', label=f'{lab_name[lab]} permuted')
+        ax.plot(positions, np.mean(all_permuted_scores, axis=1), '--', color='red', label=f'{lab_name[lab]} permuted')
    
     ax.set_title(title)
     ax.set_xlabel('Number of Components K')
@@ -521,7 +526,7 @@ def plot_comparison_nmi_one_hot_labs(S_lists, lab_labels, title = 'Comparison of
                boxprops=dict(facecolor='lightgreen'), labels=['Permuted']*n_components)
     
     # Line for the mean NMI scores
-    ax.plot(positions, np.mean(all_permuted_scores, axis=1), 'o-', color=colors[0], label='Permuted')
+    ax.plot(positions, np.mean(all_permuted_scores, axis=1), '--', color="red", label='Permuted')
 
     ax.set_title(title)
     ax.set_xlabel('Number of Components K')
