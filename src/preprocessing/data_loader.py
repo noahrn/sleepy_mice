@@ -41,6 +41,12 @@ def load_and_process_data(remove_outliers = True, normalize=True, data_path=None
     if narcolepsy:
         narcolepsy_path = config['narcolepsy_path']
         narcolepsy_data = load_data(narcolepsy_path, verbose=verbose)
+
+        # map the sleep stages to the same values as the healthy data
+        sleep_stage_map = {1: 2, 2: 3, 3: 1, 4: 4, 7: 7}  # 1->wake, 2->nrem, 3->rem
+        narcolepsy_data['sleepstage'] = narcolepsy_data['sleepstage'].map(sleep_stage_map)
+        
+        # label the narcolepsy data as 1 for 'narcolepsy' in a new column
         narcolepsy_data['narcolepsy'] = 1
         narcolepsy_data.reset_index(drop=True, inplace=True)
         
