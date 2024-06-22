@@ -53,7 +53,7 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
 # Load and process data
-df = load_and_process_data(normalize=False, lab=lab, verbose=False)
+df = load_and_process_data(narcolepsy=True, normalize=False, lab=lab, verbose=False)
 df['logrms'] = np.log1p(df['rms']) / int(logrms)
 df.insert(7, 'logrms', df.pop('logrms'))
 
@@ -64,26 +64,25 @@ df = df.sort_values("sleepstage", kind="mergesort")
 X = df[["slowdelta", "fastdelta", "slowtheta", "fasttheta", "alpha", "beta", "logrms"]]
 y = df['sleepstage']
 y2 = df['lab'].to_numpy()
+y3 = df['unique_id'].to_numpy()
+y4 = df['narcolepsy'].to_numpy()
 
 
 print("Added logrms and removed non-feature columns")
 print(X)
 
-
 X = X.to_numpy()
+y = y.replace(7, 5)
 y = y.to_numpy()
 X = X.T
 
-
-X, y, y2 = AA_trainer.sample_data(X, y, y2, method='all', n_points=250_000)
-
+X, y, y2 = AA_trainer.sample_data(X, y, y2, method='all', n_points=10_00)
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 data = torch.tensor(X).to(device)
 
 print(f"Device: {device}")
-
 
 # Fit the model for archetypes K
 K_list = [2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -137,13 +136,15 @@ print("saved C")
 
 time.sleep(10)
 
-info_list = [[] for _ in range(4)]
+info_list = [[] for _ in range(6)]
 
 # Save, X, y and y2
 info_list[0] = X
 info_list[1] = y
 info_list[2] = y2
-info_list[3] = Loss_lists
+info_list[3] = y3
+info_list[4] = y4
+info_list[5] = Loss_lists
 
 # Save the extra list, name it the current time
 with open(f'data/{name}/info_list_{time1}.pkl', 'wb') as f:

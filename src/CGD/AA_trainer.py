@@ -3,7 +3,7 @@ from tqdm import tqdm
 import torch
 import numpy as np
 
-def Optimizationloop(model, optimizer, scheduler=None, max_iter=100, tol=1e-10,disable_output=False):
+def Optimizationloop(model, optimizer, scheduler=None, max_iter=100, tol=1e-10, disable_output=False):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
 
@@ -20,19 +20,9 @@ def Optimizationloop(model, optimizer, scheduler=None, max_iter=100, tol=1e-10,d
         loss.backward()
         optimizer.step()
         lrs.append(optimizer.param_groups[0]["lr"])
-        if epoch>5:
-            if scheduler is not None:
-                scheduler.step(loss)
-                if optimizer.param_groups[0]["lr"]<0.0001:
-                    break
-            else: #specify relative tolerance threshold
-                latest = np.array(all_loss[-5:])
-                minval = np.min(latest)
-                secondlowest = np.min(latest[latest!=minval])
-                if (secondlowest-minval)/minval<tol:
-                    break
-                    # if (all_loss[-5]-all_loss[-1])/all_loss[-5]<tol:
-                #     break
+        if epoch > 100:  # Ensuring at least 100 epochs before checking for convergence
+            if np.mean(all_loss[-100:-50]) - np.mean(all_loss[-50:]) < tol:
+                break
                 
     if not disable_output:
         print("Tolerance reached at " + str(epoch+1) + " number of iterations")
