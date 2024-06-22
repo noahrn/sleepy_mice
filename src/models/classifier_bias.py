@@ -9,7 +9,12 @@ from sklearn.metrics import accuracy_score
 import pickle
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import sys
+import os.path
 
+# 1 folder back
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
 # modularized import
 from CGD import AA, Optimizationloop
@@ -18,7 +23,7 @@ from preprocessing.data_loader import load_and_process_data
 # gpu if available
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# load data
+# load data manually
 with open('data/matrices/narc_3_lab_1bias_nolog/info_list_20240620-163117.pkl', 'rb') as f: # info_list
     contents = pickle.load(f)
     X, y, y2, y3, y4, y5 = contents[:6]  # Always take the first three elements

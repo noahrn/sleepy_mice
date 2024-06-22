@@ -8,6 +8,13 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
 
+import sys
+import os.path
+
+# 1 folder back
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+
 from CGD import AA, Optimizationloop
 from preprocessing.data_loader import load_and_process_data
 

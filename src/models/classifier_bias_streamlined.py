@@ -7,7 +7,14 @@ from tqdm import tqdm
 from xgboost import XGBClassifier
 from sklearn.ensemble import RandomForestClassifier
 # from lightgbm import LGBMClassifier
+import sys
+import os.path
 
+# 1 folder back
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+
+# clasifier
 def classifier(S_lists, labels, model_type='XGBoost', iterations=1):
     accuracies = []
     for i in tqdm(range(iterations), desc="Classifier-Loop"):
@@ -28,10 +35,11 @@ def classifier(S_lists, labels, model_type='XGBoost', iterations=1):
     return accuracies
 
 def main():
-    base_dir = '/Users/noahryu/Library/CloudStorage/OneDrive-Personal/DTU/Semester 4 - 2024/Project_work/sleepy_mice'
-    matrices_dir = os.path.join(base_dir, 'data/matrices')
-    results_dir = os.path.join(base_dir, 'results')
-
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    # 1 folder back
+    matrices_dir = os.path.join(base_dir, '..', 'data/matrices')
+    results_dir = os.path.join(base_dir, '..', 'results')
+    
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
 
