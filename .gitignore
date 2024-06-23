@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+*.pyo
+*.npy
+*.egg-info/
+config.json
+data/*
+.DS_Store
+*.pkl
