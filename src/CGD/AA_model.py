@@ -2,7 +2,7 @@ import torch
 from time import time
 
 class AA(torch.nn.Module):
-    def __init__(self, num_comp, X, class_weights=None, noise_term=True, model="AA", init=None, verbose=False):
+    def __init__(self, num_comp, X, class_weights=None, noise_term=False, model="AA", init=None, verbose=False):
         super().__init__()
         if verbose:
             print('Initializing model: ' + model)
