@@ -144,12 +144,11 @@ def plot_histogram(scores, bins=30, title="Histogram of NMI Scores"):
     This function plots a histogram of NMI scores for permuted matrices.
     
     """
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(7, 4))
     plt.hist(scores, bins=bins, color='blue', alpha=0.7)
     plt.title(title)
     plt.xlabel('NMI Score')
     plt.ylabel('Frequency')
-    plt.show()
 
 
 def plot_comparison_nmi(S_lists, title = 'Comparison of NMI Scores: Original vs Permuted'):
@@ -604,4 +603,3 @@ def plot_nmi_variance_toy():
     #xticks = var
     axs[0].set_xticks(vars)
     plt.tight_layout()
-    plt.show()
