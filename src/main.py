@@ -1,15 +1,5 @@
-from data import load_data, load_config
+from preprocessing.data_loader import load_and_process_data
+import pandas as pd
 
-def main():
-    config = load_config()
-    data_path = config['data_path']
-    data = load_data(data_path)
-
-    # print headers
-    print(data.head())
-
-    # length
-    print(len(data))
-
-if __name__ == '__main__':
-    main()
+# example to check functionality of repository & config file
+df = load_and_process_data(remove_outliers = True, normalize=False, lab="all", verbose=True, narcolepsy=True)

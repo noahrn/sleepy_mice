@@ -1,3 +1,4 @@
 {
-    "data_path": "path/to/your/data.csv"
+    "data_path": "path/to/your/data.csv",
+    "narcolepsy_path": "path/to/your/narcolepsy.csv"
 }
