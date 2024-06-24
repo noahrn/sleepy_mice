@@ -5,6 +5,7 @@ __pycache__/
 *.egg-info/
 *.pkl
 config.json
+config_old.json
 .DS_Store
 *.pkl
 config_old.json
