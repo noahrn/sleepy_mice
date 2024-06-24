@@ -33,9 +33,14 @@ python src/main.py
 ```
 
 ## Acknowledgments
-1. Vasiliki-Maria Katsageorgiou, Diego Sona, Matteo Zanotto, Glenda Lassi, Celina Garcia-Garcia, Valter Tucci, and Vittorio Murino, "A novel unsupervised analysis of electrophysiological signals reveals new sleep substages in mice," PLOS Biology, vol. 16, no. 5, pp. 1–23, May 2018.
-2. Farid Yaghouby and Sridhar Sunderam, "Segway: A simple framework for unsupervised sleep segmentation in experimental EEG recordings.," MethodsX, 2016.
-3. Adele Cutler and Leo Breiman, “Archetypal analysis,” Technometrics, vol. 36, no. 4, pp. 338–347, 1994.
-4. Morten Mørup and Lars Kai Hansen, “Archetypal analysis for machine learning and data mining,” Neurocomputing, vol. 80, pp. 54–63, 2012.
+- **Vasiliki-Maria Katsageorgiou, Diego Sona, Matteo Zanotto, Glenda Lassi, Celina Garcia-Garcia, Valter Tucci, and Vittorio Murino**  
+  "A novel unsupervised analysis of electrophysiological signals reveals new sleep substages in mice," *PLOS Biology*, vol. 16, no. 5, pp. 1–23, May 2018.
 
+- **Farid Yaghouby and Sridhar Sunderam**  
+  "Segway: A simple framework for unsupervised sleep segmentation in experimental EEG recordings.," *MethodsX*, 2016.
 
+- **Adele Cutler and Leo Breiman**  
+  “Archetypal analysis,” *Technometrics*, vol. 36, no. 4, pp. 338–347, 1994.
+
+- **Morten Mørup and Lars Kai Hansen**  
+  “Archetypal analysis for machine learning and data mining,” *Neurocomputing*, vol. 80, pp. 54–63, 2012.2012.
