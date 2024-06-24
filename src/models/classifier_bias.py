@@ -33,13 +33,11 @@ if len(contents) >= 2:
     y = np.array(contents[1]) # sleepstage per datapoint
 if len(contents) >= 3:
     y2 = np.array(contents[2]) # labs per datapoint
-"""
 if len(contents) >= 4:
     y3 = np.array(contents[3]) # unique_id
 if len(contents) >= 5:
     y4 = np.array(contents[4]) # narcolepsy
-"""
-    
+
 S_lists = pickle.load(open('data/matrices/3_lab_1bias_nolog/S_lists_20240617-211347.pkl', 'rb')) # S-matrices
 
 # define classification
