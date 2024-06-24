@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import xgboost as xgb
 from sklearn.ensemble import RandomForestClassifier 
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 import pickle
 from tqdm import tqdm
 import matplotlib.pyplot as plt
@@ -24,21 +24,23 @@ from preprocessing.data_loader import load_and_process_data
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # load data manually
-with open('data/matrices/narc_3_lab_1bias_nolog/info_list_20240620-163117.pkl', 'rb') as f: # info_list
+with open('data/matrices/3_lab_1bias_nolog/info_list_20240617-211347.pkl', 'rb') as f: # info list
     contents = pickle.load(f)
-    X, y, y2, y3, y4, y5 = contents[:6]  # Always take the first three elements
     
-S_lists = pickle.load(open('data/matrices/narc_3_lab_1bias_nolog/S_lists_20240620-163117.pkl', 'rb')) # S-matrices
-
-X = np.array(X) # entire data
-y = np.array(y) # sleepstage per datapoint
-y2 = np.array(y2) # labs per datapoint
-y3 = np.array(y3) # unique_id
-y4 = np.array(y4) # narcolepsy
-print("Unique id:", np.unique(y3))
-#y6 = np.array(y5) # loss
-#print("Unique id:", np.unique(y3))
-#print("Narcolepsy:", y4)
+if len(contents) >= 1:
+    X = np.array(contents[0]) # entire data
+if len(contents) >= 2:
+    y = np.array(contents[1]) # sleepstage per datapoint
+if len(contents) >= 3:
+    y2 = np.array(contents[2]) # labs per datapoint
+"""
+if len(contents) >= 4:
+    y3 = np.array(contents[3]) # unique_id
+if len(contents) >= 5:
+    y4 = np.array(contents[4]) # narcolepsy
+"""
+    
+S_lists = pickle.load(open('data/matrices/3_lab_1bias_nolog/S_lists_20240617-211347.pkl', 'rb')) # S-matrices
 
 # define classification
 def classifier(S_lists, labels, model_type='LGBM'):
@@ -64,23 +66,7 @@ def classifier(S_lists, labels, model_type='LGBM'):
         predictions = classifier.predict(X_test)
         accuracies.append(accuracy_score(y_test, predictions))
 
-    return accuracies
-
-# set global parameters for plotting
-plt.rcParams.update({
-    'font.size': 16,
-    'figure.figsize': (14, 7),
-    'savefig.dpi': 300,
-    'axes.labelsize': 16,
-    'axes.titlesize': 18,
-    'xtick.labelsize': 14,
-    'ytick.labelsize': 14,
-    'lines.linewidth': 2,
-    'lines.markersize': 10,
-    'grid.linestyle': '--',
-    'grid.alpha': 0.7,
-    'errorbar.capsize': 5
-})
+    return accuracies, y_test, predictions 
 
 def plot_results(results):
     K = list(results.keys())
@@ -97,35 +83,36 @@ def plot_results(results):
     plt.grid()
     plt.show()
 
-results = {}
-
 # parameters
 chosen_model = 'XGBoost' # LightGBM, RF or XGBoost
-labels = y3 # y-1 for sleepstages, y2 for labs, y3 for unique_id,y4 for narcolepsy
+labels = y-1 # y-1 for sleepstages, y2 for labs, y3 for unique_id, y4 for narcolepsy for prediction
 iterations = 1 # num of classifier iterations
 
 S_lists[0][0] # first index is K, second is the iteration up to 5
 
-# only for all
+# only for all labs when predicting lab else comment out
 # y3 = y2.copy()
 # y3[y2 == 5] = 4
 # y3 = y3 - 1
-
 # labels = y3
+# print(np.unique(labels))
 
 # main 
 def main():
-    results = {}     
+    results = {}
+    final_confusion_matrix = None
     print("Chosen model:", chosen_model)
     for K in tqdm(range(2, 11), desc="K-Loop"):
         accuracies_list = []
         for j in tqdm(range(5), desc = "Iteration-Loop"):
-            accuricies = classifier(S_lists[K-2][j].T, labels=labels, model_type=chosen_model)
+            # run classifier and store predictions for potential confusion matrix plotting
+            accuricies, last_y_test, last_predictions = classifier(S_lists[K-2][j].T, labels=labels, model_type=chosen_model)
             accuracies_list.append(accuricies)
-
+            if K == 10 and j == 4:  # Check if it's the last K and last iteration
+                final_confusion_matrix = confusion_matrix(last_y_test, last_predictions)
+        
         # store mean and standard deviation in results dictionary for current K
         accuracies_list = np.array(accuracies_list).flatten()
-        #print(accuracies_list)
         results[K] = (np.mean(accuracies_list), np.std(accuracies_list, ddof=1)/np.sqrt(5))
         print(f"For K={K}, Mean Accuracy: {results[K][0]}, Standard Deviation: {results[K][1]}")
 
@@ -136,7 +123,22 @@ def main():
     data_to_save = np.core.records.fromarrays([K_values, means, std_devs], names='K, mean, std')
 
     # Save the data
-    #np.save('results/narcolepsy/narc_3_lab_1bias_nolog_accuracies.npy', data_to_save)
+    np.save('', data_to_save)
+
+    # plot the confusion matrix for the last K if it exists
+    if final_confusion_matrix is not None:
+        plt.figure(figsize=(5, 3))
+        label_values = ['1, REM', '2, Wake', '3, NREM'] # for sleepstage
+        #label_values = ['Lab 1', 'Lab 2', 'Lab 3', 'Lab 5'] # for lab
+        #label_values = ['0, Healthy', '1, Nacroleptic']
+        disp = ConfusionMatrixDisplay(confusion_matrix=final_confusion_matrix, display_labels=label_values)
+        disp.plot(cmap='viridis', values_format='d')
+        plt.title(f"Confusion Matrix for K=10, sleepstage, lab 1, log loss")
+        plt.ylabel('True Label')
+        plt.xlabel('Predicted Label')
+        plt.show()
+
+        np.save('results/cm/cm_ss_SSE_3lab.npy', final_confusion_matrix)
 
     # plot
     plot_results(results)
