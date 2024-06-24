@@ -1,15 +1,12 @@
 # Archetypal Analysis for Identification of New Substages in Sleep
 
-## Project Overview
-**Researchers**: Morten Mørup, Alexander Neergaard Zahid, Laura Rose
+## Motivation
+Preclinical mice models are often used to study sleep disorders, since it is possible to mimic specific sleep phenotypes in mice by gene manipulation. This makes it possible to study sleep processes in a very controlled setting. In sleep studies, electroencephalogram (EEG), electromyogram (EMG), and video are recorded over 24 hours to measure brain activity, muscle activity and behavior. Based on these recordings, a trained sleep expert manually divides the sleep into Wake, NREM, and REM in windows of 4-seconds.
 
-**Motivation**: 
-Preclinical mice models are often used to study sleep disorders, as it is possible to mimic specific sleep phenotypes in mice through gene manipulation. This controlled environment allows for detailed study of sleep processes. During sleep studies, electroencephalogram (EEG), electromyogram (EMG), and video data are recorded over 24 hours to measure brain activity, muscle activity, and behavior. A trained sleep expert manually segments the sleep into Wake, NREM, and REM stages using 4-second windows.
-
-Given the heterogeneity of sleep in mice, it has been hypothesized that the existing three sleep stages may not fully encompass the variability of sleep. Recent studies ([1] and [2]) have explored the identification of potential substages of sleep using various unsupervised clustering techniques. Identifying these substages could not only refine sleep study evaluations but might also facilitate the detection of disease-specific stages, potentially enhancing diagnosis significantly. The question remains whether it is possible to delineate additional substages of sleep in mice.
+Sleep in mice is very heterogeneous, thus it has been hypothesized whether the current three sleep stages covers all the variability of sleep. Recent studies ([1] and [2]) have looked into whether substages of sleep can be identified with different unsupervised clustering approaches. Identification of such substages will not only lead to more accurate sleep study evaluation but may also enable identification of disease specific stages which could improve diagnosis tremendously. Thus, it still remains an open question whether sleep in mice can be divided into more substages.
 
 ## Data
-Our dataset comprises EEG and EMG recordings from approximately 150 mice, provided both as raw signals and as preprocessed features. The features include various EEG power bands—Delta (0.25–5 Hz), Theta (5–9 Hz), Alpha (9–12 Hz), Beta (12–20 Hz), and Gamma (20–50 Hz)—extracted from the frequency domain in 4-second windows.
+Our dataset comprises EEG and EMG recordings from approximately 150 mice, including both healthy and narcoleptic mice. The data is provided as both raw signals and preprocessed features. The features include various EEG power bands—Delta (0.25–5 Hz), Theta (5–9 Hz), Alpha (9–12 Hz), Beta (12–20 Hz), and Gamma (20–50 Hz)—extracted from the frequency domain in 4-second windows. In addition to the typical sleep stages, the dataset for narcoleptic mice includes recordings of additional sleep stages such as "Atypical Cataplexy" and "Cataplexy," enabling a more nuanced analysis of sleep patterns affected by narcolepsy.
 
 ## Setup Instructions
 
