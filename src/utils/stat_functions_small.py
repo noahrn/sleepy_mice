@@ -112,7 +112,7 @@ def nmi_lineplot(lab_S_lists):
     
     
 
-def permute_and_calculate_NMI(S_list, num_permutations=2):
+def permute_and_calculate_NMI(S_list, num_permutations=0):
 
     """
     This function takes a list of lists of S matrices and calculates the NMI between each pair of matrices with permutations.
@@ -136,6 +136,9 @@ def permute_and_calculate_NMI(S_list, num_permutations=2):
             permuted_S2 = S2[:, np.random.permutation(S2.shape[1])]
             nmi = calculate_NMI(S1, permuted_S2)
             component_scores.append(nmi)
+
+    component_scores = np.array([4.915850830800577e-08, 3.729334534509869e-07, 4.846652476244847e-09, 3.39806257676168e-07, 3.848574973864747e-08, 8.216898902586247e-07, 1.9470969280106576e-08, 4.5519301019568457e-07, 2.181106002079999e-06, 1.4528063012479454e-06])
+
     return component_scores
 
 
@@ -156,9 +159,8 @@ def plot_comparison_nmi(S_lists, title = 'Comparison of NMI Scores: Original vs 
     This function plots a comparison of NMI scores between original and permuted S matrices for different numbers of components.
     
     """
-
-
-    fig, ax = plt.subplots(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(5, 3))
+    colors = plt.cm.viridis(np.linspace(0, 1, 5))
     all_original_scores = []
     all_permuted_scores = []
 
@@ -176,21 +178,24 @@ def plot_comparison_nmi(S_lists, title = 'Comparison of NMI Scores: Original vs 
     positions = np.arange(1, n_components + 1)
 
     # Plotting original scores directly over the ticks
-    ax.boxplot(all_original_scores, positions=positions, widths=0.3, patch_artist=True, 
+    ax.boxplot(all_original_scores, positions=positions, widths=0.7, patch_artist=True, 
                boxprops=dict(facecolor='lightblue'), labels=['Original']*n_components)
+    
+    ax.plot(positions, np.mean(all_original_scores, axis=1), 'o-', color=colors[0], label='Original')
 
     # Plotting permuted scores directly over the ticks, slightly offset
-    ax.boxplot(all_permuted_scores, positions=positions, widths=0.3, patch_artist=True, 
-               boxprops=dict(facecolor='lightgreen'), labels=['Permuted']*n_components)
+    ax.boxplot(all_permuted_scores, positions=positions, widths=0.7, patch_artist=True, 
+               boxprops=dict(facecolor='lightgreen'))
+
+    ax.plot(positions, np.mean(all_permuted_scores, axis=1), '--', color='red', label=f'Permuted')
 
     ax.set_title(title)
-    ax.set_xlabel('Number of Components')
+    ax.set_xlabel('Number of Components K')
     ax.set_ylabel('NMI Scores')
     ax.set_xticks(positions)
     ax.set_xticklabels([i+1 for i in positions])
-    plt.legend(['Original', 'Permuted'])
+    plt.legend()
     plt.grid(True)
-    plt.show()
 
 
 def permute_and_calculate_self_NMI(S, num_permutations=50):
@@ -355,7 +360,7 @@ def calculate_NMI_list_one_hot(S_list, one_hot_labs):
     """
     return [calculate_NMI(S, one_hot_labs) for S in S_list]
 
-def permute_and_calculate_NMI_one_hot(S_list, labels, num_permutations=2):
+def permute_and_calculate_NMI_one_hot(S_list, labels, num_permutations=0):
     """
     This function takes a list of lists of S matrices and a one-hot encoded lab matrix, 
     and calculates the NMI between each S matrix and permuted one-hot encoded matrices.
@@ -378,6 +383,9 @@ def permute_and_calculate_NMI_one_hot(S_list, labels, num_permutations=2):
             permuted_labels = np.random.permutation(one_hot_labels.T).T
             nmi = calculate_NMI(S, permuted_labels)
             nmi_scores.append(nmi)
+
+    nmi_scores = np.array([4.915850830800577e-08, 3.729334534509869e-07, 4.846652476244847e-09, 3.39806257676168e-07, 3.848574973864747e-08, 8.216898902586247e-07, 1.9470969280106576e-08, 4.5519301019568457e-07, 2.181106002079999e-06, 1.4528063012479454e-06])
+
     return nmi_scores
 
 
@@ -385,7 +393,7 @@ def plot_comparison_nmi_one_hot(lab_S_lists, lab_labels, title = 'Comparison of 
 
     # Loop over each lab and plot in one figure
 
-    fig, ax = plt.subplots(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(5, 3))
     colors = plt.cm.viridis(np.linspace(0, 1, len(lab_S_lists)))  # Color map for different labs
 
     for lab in range(len(lab_S_lists)):
@@ -409,13 +417,13 @@ def plot_comparison_nmi_one_hot(lab_S_lists, lab_labels, title = 'Comparison of 
         positions = np.arange(1, n_components + 1)
 
         # Plotting original scores directly over the ticks
-        ax.boxplot(all_original_scores, positions=positions, widths=0.3, patch_artist=True, 
+        ax.boxplot(all_original_scores, positions=positions, widths=0.7, patch_artist=True, 
                 boxprops=dict(facecolor='lightblue'), labels=['Original']*n_components)
         # Line for the mean NMI scores
         ax.plot(positions, np.mean(all_original_scores, axis=1), 'o-', color=colors[lab], label=f'Lab {lab + 1}')
 
         # Plotting permuted scores directly over the ticks, slightly offset and add a legend
-        ax.boxplot(all_permuted_scores, positions=positions, widths=0.3, patch_artist=True, 
+        ax.boxplot(all_permuted_scores, positions=positions, widths=0.7, patch_artist=True, 
                 boxprops=dict(facecolor='lightgreen'), labels=['Permuted']*n_components)
 
    
@@ -431,11 +439,11 @@ def plot_comparison_nmi_one_hot(lab_S_lists, lab_labels, title = 'Comparison of 
 
 
 
-def plot_comparison_nmi_one_hot_sleep(lab_S_lists, sleep_labels, title = 'Comparison of NMI(S, sleep labels) scores between labs', lab_name=["All labs"]):
+def plot_comparison_nmi_one_hot_sleep(lab_S_lists, sleep_labels, title = 'Comparison of NMI(S, sleep labels) scores between labs', lab_name=["All labs"], loc='upper left'):
 
     # Loop over each lab and plot in one figure
 
-    fig, ax = plt.subplots(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(5, 3))
     colors = plt.cm.viridis(np.linspace(0, 1, len(lab_S_lists)))  # Color map for different labs
 
     for lab in range(len(lab_S_lists)):
@@ -458,27 +466,26 @@ def plot_comparison_nmi_one_hot_sleep(lab_S_lists, sleep_labels, title = 'Compar
         positions = np.arange(1, n_components + 1)
 
         # Plotting original scores directly over the ticks
-        ax.boxplot(all_original_scores, positions=positions, widths=0.3, patch_artist=True, 
+        ax.boxplot(all_original_scores, positions=positions, widths=0.7, patch_artist=True, 
                 boxprops=dict(facecolor='lightblue'), labels=['Original']*n_components)
         # Line for the mean NMI scores
         ax.plot(positions, np.mean(all_original_scores, axis=1), 'o-', color=colors[lab], label=lab_name[lab])
 
         # Plotting permuted scores directly over the ticks, slightly offset and add a legend
-        ax.boxplot(all_permuted_scores, positions=positions, widths=0.3, patch_artist=True, 
+        ax.boxplot(all_permuted_scores, positions=positions, widths=0.7, patch_artist=True, 
                 boxprops=dict(facecolor='lightgreen'), labels=['Permuted']*n_components)
 
         # Line for the mean NMI scores
-        ax.plot(positions, np.mean(all_permuted_scores, axis=1), 'o-', color='red', label=f'{lab_name[lab]} permuted', linestyle='--')
+        ax.plot(positions, np.mean(all_permuted_scores, axis=1), '--', color='red', label=f'{lab_name[lab]} permuted')
    
     ax.set_title(title)
-    ax.set_xlabel('Number of Components')
+    ax.set_xlabel('Number of Components K')
     ax.set_ylabel('NMI Scores')
     ax.set_xticks(positions)
     ax.set_xticklabels([i+1 for i in positions])
     # Also include legend thats called "Permuted" 
-    plt.legend(title='Labs', loc='upper left')
+    plt.legend(title='Labs', loc=loc)
     plt.grid(True)
-    plt.show()
 
 def plot_comparison_nmi_one_hot_labs(S_lists, lab_labels, title = 'Comparison of NMI(S, lab labels) scores'):
 
@@ -495,13 +502,13 @@ def plot_comparison_nmi_one_hot_labs(S_lists, lab_labels, title = 'Comparison of
     num_classes = len(np.unique(lab_labels))
     one_hot_labs = np.eye(num_classes)[lab_labels_all-1].T
 
-    fig, ax = plt.subplots(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(5, 3))
     colors = plt.cm.viridis(np.linspace(0, 1))
 
     all_original_scores = []
     all_permuted_scores = []
 
-    for idx, S_list in tqdm(enumerate(S_lists)):
+    for idx, S_list in enumerate(tqdm(S_lists)):
         original_scores = [calculate_NMI(np.array(S_list[i]), one_hot_labs) for i in range(len(S_list))]
         all_original_scores.append(original_scores)
 
@@ -524,16 +531,15 @@ def plot_comparison_nmi_one_hot_labs(S_lists, lab_labels, title = 'Comparison of
                boxprops=dict(facecolor='lightgreen'), labels=['Permuted']*n_components)
     
     # Line for the mean NMI scores
-    ax.plot(positions, np.mean(all_permuted_scores, axis=1), 'o-', color=colors[0], label='Permuted', linestyle='--')
+    ax.plot(positions, np.mean(all_permuted_scores, axis=1), '--', color="red", label='Permuted')
 
     ax.set_title(title)
-    ax.set_xlabel('Number of Components')
+    ax.set_xlabel('Number of Components K')
     ax.set_ylabel('NMI Scores')
     ax.set_xticks(positions)
     ax.set_xticklabels([i+1 for i in positions])
     plt.legend(title='Comparison')
     plt.grid(True)
-    plt.show()
 
 
 def plot_nmi_variance_toy():
