@@ -21,8 +21,8 @@ def Optimizationloop(model, optimizer, scheduler=None, max_iter=100, tol=1e-10,d
         optimizer.step()
         lrs.append(optimizer.param_groups[0]["lr"])
         if epoch > 100:  # Ensuring at least 100 epochs before checking for convergence
-                if np.mean(all_loss[-100:-50]) - np.mean(all_loss[-50:]) < tol:
-                    break
+            if np.mean(all_loss[-100:-50]) - np.mean(all_loss[-50:]) < tol:
+                break
                 
     if not disable_output:
         print("Tolerance reached at " + str(epoch+1) + " number of iterations")
