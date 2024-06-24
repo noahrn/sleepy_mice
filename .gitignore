@@ -6,7 +6,10 @@ __pycache__/
 *.pkl
 config.json
 config_old.json
-data/*
-!.gitignore
+.DS_Store
+*.pkl
+config_old.json
+data/**/*
+!data/.gitignore
 .DS_Store
 src/test.ipynb

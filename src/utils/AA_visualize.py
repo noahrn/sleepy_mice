@@ -111,7 +111,7 @@ def plot_AA_simple(X: np.ndarray, C: np.ndarray, S: np.ndarray, K: int):
     """
 
     XC = X@C
-    fig, axs = plt.subplots(1,3,figsize=(15,5),layout='constrained')
+    fig, axs = plt.subplots(1,3,figsize=(12,4),layout='constrained')
 
     # Plot 1 - C (transposed) matrix
     for k in range(K):
