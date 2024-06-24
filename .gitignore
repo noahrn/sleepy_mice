@@ -3,7 +3,12 @@ __pycache__/
 *.pyo
 *.npy
 *.egg-info/
+*.pkl
 config.json
-data/*
 .DS_Store
 *.pkl
+config_old.json
+data/**/*
+!data/.gitignore
+.DS_Store
+src/test.ipynb

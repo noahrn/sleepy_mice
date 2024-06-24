@@ -2,17 +2,24 @@ import torch
 from time import time
 
 class AA(torch.nn.Module):
-    def __init__(self, num_comp, X, model="AA", init=None, verbose=False):
+    def __init__(self, num_comp, X, class_weights=None, noise_term=False, model="AA", init=None, verbose=False):
         super().__init__()
         if verbose:
             print('Initializing model: ' + model)
             t1 = time()
 
         self.model = model
+        self.noise_term = noise_term
 
         K = num_comp
         P = X.shape[-1]
         self.X = X
+        self.class_weights = class_weights
+
+        # Calculate class weights if not provided
+        if class_weights is None:
+            class_weights = torch.ones(P, dtype=torch.double)
+        self.class_weights = class_weights
 
         self.softmaxG = torch.nn.Softmax(dim=0)
         self.softmaxS = torch.nn.Softmax(dim=-2)
@@ -42,8 +49,23 @@ class AA(torch.nn.Module):
         S_soft = self.softmaxS(self.S)
         G_soft = self.softmaxG(self.G)
 
-        loss = torch.sum(torch.linalg.matrix_norm(self.X - self.X @ G_soft @ S_soft)**2)
+        device = self.G.device
+        self.class_weights = self.class_weights.to(device)
 
+        residual = self.X - self.X @ G_soft @ S_soft
+        #residual_squared = torch.linalg.norm(residual, ord='fro') ** 2
+        #weighted_loss = torch.sum(residual_squared)
+        
+        #print(torch.sum((residual**2), dim=1))
+        #print(torch.sum((residual**2) * self.class_weights, dim=1))
+
+        if self.noise_term:
+            loss = torch.sum(torch.log(torch.sum((residual**2) * self.class_weights + 1e-10, dim=1)))
+        else:
+            loss = torch.sum((residual**2) * self.class_weights)
+
+            
         if torch.isnan(loss):
             raise ValueError('Loss is NaN')
+        
         return loss
