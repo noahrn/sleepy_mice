@@ -13,13 +13,13 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
 # Load and process data
-df = load_and_process_data(normalize=False, lab="1", verbose=False)
-df['logrms'] = np.log1p(df['rms']) / 3
+df = load_and_process_data(normalize=False, lab="all", verbose=False)
+df['logrms'] = np.log1p(df['rms'])
 df.insert(7, 'logrms', df.pop('logrms'))
 
 print(df)
 
-print("lab1 logrms/3 allpoints")
+print("alllabs logrms/1 allpoints logloss")
 
 # only keep ["slowdelta", "fastdelta", "slowtheta", "fasttheta", "alpha", "beta", "logrms"]
 df = df.sort_values("sleepstage")
@@ -37,7 +37,7 @@ y = y.to_numpy()
 X = X.T
 
 
-X, y, y2 = AA_trainer.sample_data(X, y, y2, method='all', n_points=10_000)
+X, y, y2 = AA_trainer.sample_data(X, y, y2, method='all', n_points=250_000)
 
 
 
@@ -77,7 +77,6 @@ for i, K in enumerate(K_list):
         C, S = model.get_model_params()
         C_lists[i].append(C)
         S_lists[i].append(S)
-
 
 
 # save the two list with pickle

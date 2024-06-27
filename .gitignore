@@ -7,6 +7,8 @@ __pycache__/
 config.json
 config_old.json
 .DS_Store
+src/test.ipynb
+submit.sh
 *.pkl
 config_old.json
 data/**/*
