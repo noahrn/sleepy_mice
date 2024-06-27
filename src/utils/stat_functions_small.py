@@ -137,8 +137,6 @@ def permute_and_calculate_NMI(S_list, num_permutations=0):
             nmi = calculate_NMI(S1, permuted_S2)
             component_scores.append(nmi)
 
-    component_scores = np.array([4.915850830800577e-08, 3.729334534509869e-07, 4.846652476244847e-09, 3.39806257676168e-07, 3.848574973864747e-08, 8.216898902586247e-07, 1.9470969280106576e-08, 4.5519301019568457e-07, 2.181106002079999e-06, 1.4528063012479454e-06])
-
     return component_scores
 
 
@@ -383,8 +381,6 @@ def permute_and_calculate_NMI_one_hot(S_list, labels, num_permutations=0):
             permuted_labels = np.random.permutation(one_hot_labels.T).T
             nmi = calculate_NMI(S, permuted_labels)
             nmi_scores.append(nmi)
-
-    nmi_scores = np.array([4.915850830800577e-08, 3.729334534509869e-07, 4.846652476244847e-09, 3.39806257676168e-07, 3.848574973864747e-08, 8.216898902586247e-07, 1.9470969280106576e-08, 4.5519301019568457e-07, 2.181106002079999e-06, 1.4528063012479454e-06])
 
     return nmi_scores
 

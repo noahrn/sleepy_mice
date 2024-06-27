@@ -13,10 +13,13 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
 # Load and process data
-df = load_and_process_data(normalize=False, lab="all")
-df['logrms'] = np.log1p(df['rms'])
+df = load_and_process_data(normalize=False, lab="1", verbose=False)
+df['logrms'] = np.log1p(df['rms']) / 3
 df.insert(7, 'logrms', df.pop('logrms'))
 
+print(df)
+
+print("lab1 logrms/3 allpoints")
 
 # only keep ["slowdelta", "fastdelta", "slowtheta", "fasttheta", "alpha", "beta", "logrms"]
 df = df.sort_values("sleepstage")
@@ -34,7 +37,7 @@ y = y.to_numpy()
 X = X.T
 
 
-X, y, y2 = AA_trainer.sample_data(X, y, y2, method='random', n_points=90_000)
+X, y, y2 = AA_trainer.sample_data(X, y, y2, method='all', n_points=10_000)
 
 
 
@@ -45,7 +48,7 @@ print(f"Device: {device}")
 
 
 # Fit the model for archetypes K
-K_list = [4, 5]
+K_list = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 
 C_lists = [[] for _ in range(len(K_list))]
@@ -70,7 +73,7 @@ for i, K in enumerate(K_list):
         print((i, j))
         model = AA_model.AA(X=data, num_comp=K, class_weights=sample_weights, noise_term=False, model='AA', verbose=False)
         optimizer = torch.optim.Adam(model.parameters(), lr=0.02)
-        loss,_ = AA_trainer.Optimizationloop(model=model,optimizer=optimizer,max_iter=1000,tol=1e-6, disable_output=True)
+        loss,_ = AA_trainer.Optimizationloop(model=model,optimizer=optimizer,max_iter=1500,tol=1e-6, disable_output=True)
         C, S = model.get_model_params()
         C_lists[i].append(C)
         S_lists[i].append(S)
@@ -78,12 +81,19 @@ for i, K in enumerate(K_list):
 
 
 # save the two list with pickle
-with open(f'data/C_lists{time}.pkl', 'wb') as f:
-    pickle.dump(C_lists, f)
+time1 = time.strftime("%Y%m%d-%H%M%S")
 
-with open(f'data/S_lists{time}.pkl', 'wb') as f:
+with open(f'data/S_lists_{time1}.pkl', 'wb') as f:
     pickle.dump(S_lists, f)
+print("saved S")
 
+time.sleep(10)
+
+with open(f'data/C_lists_{time1}.pkl', 'wb') as f:
+    pickle.dump(C_lists, f)
+print("saved C")
+
+time.sleep(10)
 
 info_list = [[] for _ in range(3)]
 
@@ -93,6 +103,8 @@ info_list[1] = y
 info_list[2] = y2
 
 # Save the extra list, name it the current time
-time = time.strftime("%Y%m%d-%H%M%S")
-with open(f'data/info_list_{time}.pkl', 'wb') as f:
+with open(f'data/info_list_{time1}.pkl', 'wb') as f:
     pickle.dump(info_list, f)
+print("saved info")
+
+time.sleep(10)

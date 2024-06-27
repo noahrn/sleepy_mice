@@ -3,7 +3,7 @@ from tqdm import tqdm
 import torch
 import numpy as np
 
-def Optimizationloop(model, optimizer, scheduler=None, max_iter=100, tol=1e-10,disable_output=False):
+def Optimizationloop(model, optimizer, scheduler=None, max_iter=100, tol=1e-10, disable_output=False):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
 
