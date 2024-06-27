@@ -40,8 +40,10 @@ except ValueError as e:
 
 if ll == "l":
 	log_loss = True
+    lr = 0.02
 else:
 	log_loss = False
+    lr = 0.1
 if lab == "a":
 	lab = "all"
 
@@ -111,7 +113,7 @@ for i, K in enumerate(K_list):
     for j in range(5):
         print((i, j))
         model = AA_model.AA(X=data, num_comp=K, class_weights=sample_weights, noise_term=log_loss, model='AA', verbose=False)
-        optimizer = torch.optim.Adam(model.parameters(), lr=0.02)
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr)
         loss,_ = AA_trainer.Optimizationloop(model=model,optimizer=optimizer,max_iter=1500,tol=1e-6, disable_output=True)
         C, S = model.get_model_params()
         C_lists[i].append(C)

@@ -10,3 +10,4 @@ data/*
 !.gitignore
 .DS_Store
 src/test.ipynb
+submit.sh

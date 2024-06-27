@@ -98,7 +98,7 @@ for idx, f in enumerate(folders):
             acc_list_K.append(acc)
 
         acc_list_xgb.append(np.mean(acc_list_K))
-        std_acc_list_xgb.append(np.std(acc_list_K))
+        std_acc_list_xgb.append(np.std(acc_list_K) / np.sqrt(5))
 
     print(acc_list_xgb)
     plt.figure()
