@@ -2,7 +2,7 @@ import torch
 from time import time
 
 class AA(torch.nn.Module):
-    def __init__(self, num_comp, X, class_weights=None, noise_term=True, model="AA", init=None, verbose=False):
+    def __init__(self, num_comp, X, class_weights=None, noise_term=False, model="AA", init=None, verbose=False):
         super().__init__()
         if verbose:
             print('Initializing model: ' + model)
@@ -60,7 +60,7 @@ class AA(torch.nn.Module):
         #print(torch.sum((residual**2) * self.class_weights, dim=1))
 
         if self.noise_term:
-            loss = torch.sum(torch.log(torch.sum((residual**2) * self.class_weights + 1e-10, dim=1)))
+            loss = torch.sum(torch.log(torch.sum((residual**2) * self.class_weights, dim=1) + 1e-10))
         else:
             loss = torch.sum((residual**2) * self.class_weights)
 
